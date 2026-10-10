@@ -17,6 +17,15 @@ const 加入目標說明表 = {
 
 const 副露種類清單 = ['吃', '碰', '明槓', '暗槓'];
 
+/* 小裝置是上下單欄，牌庫與三個目標框離得遠，右下角放一組浮動快捷鈕 */
+const 浮動目標清單 = [
+  { 代號: '寶牌', 單字: '寶', 說明: '接下來點的牌加到寶牌' },
+  { 代號: '手牌', 單字: '手', 說明: '接下來點的牌加到手牌' },
+  { 代號: '副露', 單字: '露', 說明: '接下來點的牌加到副露' }
+];
+
+const 副露種類單字表 = { 吃: '吃', 碰: '碰', 明槓: '明', 暗槓: '暗' };
+
 const 和牌狀況定義清單 = [
   { 代號: '是立直', 顯示名稱: '立直', 需要門前: true },
   { 代號: '是雙立直', 顯示名稱: '雙立直', 需要門前: true },
@@ -192,8 +201,53 @@ function 渲染區塊選取狀態() {
     區塊.classList.toggle('選取中', 被選中);
   }
   渲染副露種類列();
+  渲染浮動目標列();
   document.getElementById('加入目標提示').textContent =
     加入目標說明表[畫面狀態.加入目標] + 取得牌庫停用原因();
+}
+
+/** 右下角的浮動快捷鈕，點了等同點對應的框 */
+function 渲染浮動目標列() {
+  const 容器 = document.getElementById('浮動目標列');
+  容器.textContent = '';
+  const 目前是副露 = 副露種類清單.includes(畫面狀態.加入目標);
+
+  // 選到副露時，左邊展開吃、碰、明槓、暗槓
+  if (目前是副露) {
+    const 種類列 = document.createElement('div');
+    種類列.className = '浮動種類列';
+    for (const 種類 of 副露種類清單) {
+      const 小圈 = document.createElement('button');
+      小圈.type = 'button';
+      小圈.className = '浮動種類圈' + (畫面狀態.加入目標 === 種類 ? ' 選取中' : '');
+      小圈.textContent = 副露種類單字表[種類];
+      小圈.title = 種類;
+      小圈.addEventListener('click', () => {
+        畫面狀態.副露種類 = 種類;
+        畫面狀態.加入目標 = 種類;
+        重新渲染全部();
+      });
+      種類列.appendChild(小圈);
+    }
+    容器.appendChild(種類列);
+  }
+
+  const 主圈列 = document.createElement('div');
+  主圈列.className = '浮動主圈列';
+  for (const 目標 of 浮動目標清單) {
+    const 圈圈 = document.createElement('button');
+    圈圈.type = 'button';
+    const 被選中 = 目標.代號 === '副露' ? 目前是副露 : 畫面狀態.加入目標 === 目標.代號;
+    圈圈.className = '浮動圈' + (被選中 ? ' 選取中' : '');
+    圈圈.textContent = 目標.單字;
+    圈圈.title = 目標.說明;
+    圈圈.addEventListener('click', () => {
+      畫面狀態.加入目標 = 目標.代號 === '副露' ? 畫面狀態.副露種類 : 目標.代號;
+      重新渲染全部();
+    });
+    主圈列.appendChild(圈圈);
+  }
+  容器.appendChild(主圈列);
 }
 
 /** 副露框裡再選吃、碰、明槓、暗槓 */
