@@ -68,16 +68,25 @@
             </select>
           </div>
           <div class="設定項">
-            <label for="連莊數輸入">連莊數</label>
-            <input type="number" id="連莊數輸入" class="數字輸入" min="0" max="99" step="1" value="0">
+            <label for="連莊數選單">連莊數</label>
+            <select id="連莊數選單">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10</option>
+            </select>
             <span class="欄位單位">本場</span>
           </div>
           <div class="設定項">
-            <label for="和牌方式選單">和牌方式</label>
-            <select id="和牌方式選單">
-              <option value="榮和">榮和（別人打出）</option>
-              <option value="自摸">自摸</option>
-            </select>
+            <span class="欄位標題">和牌方式</span>
+            <div class="和牌方式鈕組" id="和牌方式鈕組"></div>
           </div>
         </div>
       </section>

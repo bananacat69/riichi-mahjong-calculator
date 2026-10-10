@@ -475,6 +475,23 @@ function 渲染和牌張() {
   容器.appendChild(包裝);
 }
 
+/** 和牌方式用兩顆按鈕切換 */
+function 渲染和牌方式鈕組() {
+  const 容器 = document.getElementById('和牌方式鈕組');
+  容器.textContent = '';
+  for (const 方式 of [{ 名稱: '自摸', 是自摸: true }, { 名稱: '榮和', 是自摸: false }]) {
+    const 按鈕 = document.createElement('button');
+    按鈕.type = 'button';
+    按鈕.className = '和牌方式鈕' + (畫面狀態.是自摸 === 方式.是自摸 ? ' 選取中' : '');
+    按鈕.textContent = 方式.名稱;
+    按鈕.addEventListener('click', () => {
+      畫面狀態.是自摸 = 方式.是自摸;
+      重新渲染全部();
+    });
+    容器.appendChild(按鈕);
+  }
+}
+
 /** 裏寶牌只有門前立直和牌才會翻開，說明文字跟著目前的狀態走 */
 function 渲染寶牌說明() {
   const 是門前 = 畫面狀態.副露清單.every((副露) => 副露.種類 === '暗槓');
@@ -786,6 +803,7 @@ function 重新渲染全部() {
   渲染牌庫();
   渲染手牌();
   渲染副露();
+  渲染和牌方式鈕組();
   渲染寶牌();
   渲染和牌張();
   渲染寶牌說明();
@@ -798,10 +816,9 @@ function 全部重設() {
   畫面狀態.自風牌 = 計算引擎.南風編號;
   畫面狀態.是自摸 = false;
   畫面狀態.連莊數 = 0;
-  document.getElementById('連莊數輸入').value = '0';
+  document.getElementById('連莊數選單').value = '0';
   document.getElementById('場風選單').value = String(計算引擎.東風編號);
   document.getElementById('自風選單').value = String(計算引擎.南風編號);
-  document.getElementById('和牌方式選單').value = '榮和';
   畫面狀態.手牌 = [];
   畫面狀態.和牌張 = null;
   畫面狀態.副露清單 = [];
@@ -849,21 +866,10 @@ function 初始化畫面() {
     重新渲染全部();
   });
 
-  const 和牌方式選單 = document.getElementById('和牌方式選單');
-  和牌方式選單.addEventListener('change', () => {
-    畫面狀態.是自摸 = 和牌方式選單.value === '自摸';
+  const 連莊數選單 = document.getElementById('連莊數選單');
+  連莊數選單.addEventListener('change', () => {
+    畫面狀態.連莊數 = Number(連莊數選單.value);
     重新渲染全部();
-  });
-
-  const 連莊數輸入 = document.getElementById('連莊數輸入');
-  連莊數輸入.addEventListener('input', () => {
-    const 輸入值 = Math.floor(Number(連莊數輸入.value));
-    畫面狀態.連莊數 = Number.isFinite(輸入值) && 輸入值 > 0 ? Math.min(輸入值, 99) : 0;
-    重新渲染全部();
-  });
-  // 離開欄位時把負數、小數、空白這些寫不出來的值收斂成實際採用的數字
-  連莊數輸入.addEventListener('change', () => {
-    連莊數輸入.value = String(畫面狀態.連莊數);
   });
 
   document.getElementById('全部重設鈕').addEventListener('click', () => {

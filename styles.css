@@ -358,19 +358,28 @@ button,
 }
 .設定項 { display: flex; align-items: center; gap: 7px; font-size: 13px; }
 .設定項 label { color: var(--次要文字色); }
-.數字輸入 {
-  width: 56px;
+.欄位單位 { font-size: 13px; color: var(--次要文字色); }
+.欄位標題 { font-size: 13px; color: var(--次要文字色); }
+
+.和牌方式鈕組 { display: flex; gap: 5px; }
+.和牌方式鈕 {
+  border: 1px solid var(--框線色);
+  background: #fbf9f4;
+  color: var(--次要文字色);
+  border-radius: 999px;
+  padding: 4px 16px;
   font-family: inherit;
   font-size: 13px;
-  padding: 4px 6px;
-  border: 1px solid var(--框線色);
-  border-radius: 6px;
-  background: #fff;
-  color: var(--文字色);
-  text-align: right;
-  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease;
 }
-.欄位單位 { font-size: 13px; color: var(--次要文字色); }
+.和牌方式鈕:hover { background: #efece2; }
+.和牌方式鈕.選取中 {
+  background: var(--主色);
+  border-color: var(--主色);
+  color: #fff;
+  font-weight: 700;
+}
 
 select {
   font-family: inherit;
