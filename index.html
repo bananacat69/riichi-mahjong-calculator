@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>日本麻將 番數與點數計算</title>
+<link rel="stylesheet" href="樣式.css">
+</head>
+<body>
+<div class="整體容器">
+
+  <header class="頁首">
+    <h1>
+      日本麻將 番數與點數計算
+      <button type="button" class="說明圈鈕" id="開啟規則說明鈕" aria-label="查看採用的規則細節" title="查看採用的規則細節">?</button>
+      <button type="button" class="一般按鈕 頁首按鈕" id="全部重設鈕">全部重設</button>
+    </h1>
+  </header>
+
+  <dialog class="規則說明視窗" id="規則說明視窗">
+    <div class="視窗標頭">
+      <h2>採用的規則細節</h2>
+      <button type="button" class="視窗關閉鈕" id="關閉規則說明鈕" aria-label="關閉">×</button>
+    </div>
+    <div class="視窗內容" id="規則說明內容" tabindex="-1">
+      <p>規則基準是雀魂／天鳳標準，兩者有差異時以雀魂為準。</p>
+      <ul>
+        <li>吃碰後仍可和斷么九（食斷有）。</li>
+        <li>赤寶牌每張一番；寶牌本身不算役，沒有役就不能和牌。</li>
+        <li>十三番以上算累計役滿；沒有切上滿貫，四番三十符是 7700 點而不是滿貫。</li>
+        <li>役滿一律一倍，不同役滿同時成立時倍數相加（不採用雙倍役滿）。</li>
+        <li>場風與自風相同的連風牌當雀頭算四符（雀魂規則；天鳳與競技團體算兩符）。</li>
+        <li>七對子固定二十五符，平和自摸固定二十符，副露平和型榮和固定三十符。</li>
+        <li>榮和時完成最後一組面子的那張牌算明刻，不計入暗刻。</li>
+        <li>同一副手牌有多種拆法時，取點數最高的一種。</li>
+      </ul>
+      <p class="視窗附註">未涵蓋：流局滿貫、人和、三家和、包牌責任制與各種地方役。</p>
+    </div>
+  </dialog>
+
+  <dialog class="結果視窗" id="結果視窗">
+    <button type="button" class="結果關閉鈕" id="關閉結果鈕" aria-label="關閉">×</button>
+    <div id="結果內容" tabindex="-1"></div>
+  </dialog>
+
+  <div class="雙欄版面">
+    <div class="操作欄">
+
+      <section class="區塊">
+        <h2>一、基本設定</h2>
+        <div class="設定列">
+          <div class="設定項">
+            <label for="場風選單">場風</label>
+            <select id="場風選單">
+              <option value="27">東</option>
+              <option value="28">南</option>
+              <option value="29">西</option>
+              <option value="30">北</option>
+            </select>
+          </div>
+          <div class="設定項">
+            <label for="自風選單">自風</label>
+            <select id="自風選單">
+              <option value="27">東（莊家）</option>
+              <option value="28" selected>南（子家）</option>
+              <option value="29">西（子家）</option>
+              <option value="30">北（子家）</option>
+            </select>
+          </div>
+          <div class="設定項">
+            <label for="連莊數輸入">連莊數</label>
+            <input type="number" id="連莊數輸入" class="數字輸入" min="0" max="99" step="1" value="0">
+            <span class="欄位單位">本場</span>
+          </div>
+          <div class="設定項">
+            <label for="和牌方式選單">和牌方式</label>
+            <select id="和牌方式選單">
+              <option value="榮和">榮和（別人打出）</option>
+              <option value="自摸">自摸</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="區塊">
+        <h2>二、和牌狀況 <span class="說明">不符合條件的項目會自動停用</span></h2>
+        <div class="勾選格" id="和牌狀況格"></div>
+      </section>
+
+      <section class="區塊">
+        <h2>三、點牌 <span class="剩餘張數" id="剩餘張數顯示"></span></h2>
+        <div id="牌庫區"></div>
+        <p class="加入目標提示" id="加入目標提示"></p>
+      </section>
+
+    </div>
+
+    <div class="展示欄">
+
+      <section class="區塊 可選取" id="寶牌區塊" data-加入目標="寶牌">
+        <h2>寶牌 <span class="說明">填寶牌、有立直才填裏寶牌</span></h2>
+        <div class="手牌列" id="寶牌列"></div>
+        <p class="區塊附註" id="寶牌說明"></p>
+      </section>
+
+      <section class="區塊 可選取" id="手牌區塊" data-加入目標="手牌">
+        <h2>手牌 <span class="說明">點牌面＝指定為和牌張（紅框），點右上角 × ＝移除</span></h2>
+        <div class="手牌列" id="手牌列"></div>
+      </section>
+
+      <section class="區塊 可選取" id="副露區塊" data-加入目標="副露">
+        <h2>副露</h2>
+        <div class="副露與種類">
+          <div class="副露框" id="副露列"></div>
+          <div class="副露種類列" id="副露種類列"></div>
+        </div>
+        <p class="區塊附註">吃是以點到的牌為最小張組成順子；暗槓不破壞門前。</p>
+      </section>
+
+      <button type="button" class="計算鈕" id="計算鈕"></button>
+
+    </div>
+  </div>
+
+</div>
+
+<script src="手牌計算引擎.js"></script>
+<script src="畫面互動.js"></script>
+</body>
+</html>

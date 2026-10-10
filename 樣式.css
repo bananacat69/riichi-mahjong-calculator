@@ -1,0 +1,622 @@
+:root {
+  --底色: #f2efe6;
+  --卡片底色: #ffffff;
+  --主色: #1f4a3a;
+  --主色淺: #2f6b55;
+  --強調色: #b03a2e;
+  --文字色: #23201b;
+  --次要文字色: #6b6355;
+  --框線色: #ddd6c6;
+  --萬子色: #b03a2e;
+  --筒子色: #1b5e8a;
+  --索子色: #1f6b43;
+  --字牌色: #2b2b2b;
+  --圓角: 10px;
+  --陰影: 0 1px 3px rgba(35, 32, 27, .14);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--底色);
+  color: var(--文字色);
+  font-family: "Hiragino Sans", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.整體容器 {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 12px 14px 20px;
+}
+
+/* ---------- 標題 ---------- */
+.頁首 {
+  border-bottom: 2px solid var(--主色);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+.頁首 h1 {
+  margin: 0;
+  font-size: 21px;
+  letter-spacing: .06em;
+  color: var(--主色);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------- 版面 ---------- */
+.雙欄版面 {
+  display: grid;
+  grid-template-columns: minmax(0, 480px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+.雙欄版面 > * { min-width: 0; }
+
+.區塊 {
+  background: var(--卡片底色);
+  border: 1px solid var(--框線色);
+  border-radius: var(--圓角);
+  padding: 10px 13px;
+  margin-bottom: 11px;
+  box-shadow: var(--陰影);
+}
+/* 右邊三個框點了就是選定加入目標 */
+.區塊.可選取 { cursor: pointer; }
+.區塊.可選取:hover { border-color: var(--主色淺); }
+.區塊.可選取.選取中 {
+  border-color: var(--主色);
+  box-shadow: inset 4px 0 0 var(--主色), var(--陰影);
+}
+.區塊.可選取.選取中 > h2 { color: var(--主色); }
+.區塊.可選取.選取中 > h2::after {
+  content: '現在加到這裡';
+  margin-left: auto;
+  flex: none;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: #fff;
+  background: var(--主色);
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+
+.副露與種類 { display: flex; gap: 10px; align-items: stretch; }
+.副露框 {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 8px;
+  background: #efece2;
+  border-radius: 8px;
+}
+.副露種類列 {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 0 0 78px;
+  min-height: 104px;
+}
+.副露種類鈕 {
+  flex: 1;
+  border: 1px solid var(--框線色);
+  background: #fbf9f4;
+  color: var(--次要文字色);
+  border-radius: 8px;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 400;
+  font-family: inherit;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+.副露種類鈕:hover { background: #efece2; }
+.副露種類鈕.選取中 {
+  background: var(--主色);
+  border-color: var(--主色);
+  color: #fff;
+  font-weight: 600;
+}
+
+.區塊 > h2 {
+  margin: 0 0 7px;
+  font-size: 15px;
+  color: var(--主色);
+  letter-spacing: .05em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.剩餘張數 {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--次要文字色);
+  background: #f3f0e6;
+  border: 1px solid var(--框線色);
+  border-radius: 999px;
+  padding: 2px 12px;
+  letter-spacing: 0;
+}
+.剩餘張數 .張數 {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--強調色);
+  font-variant-numeric: tabular-nums;
+}
+.剩餘張數.已湊齊 {
+  background: #e9f1ec;
+  border-color: #bcd6c7;
+  color: var(--主色);
+}
+
+.區塊 > h2 .說明 {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--次要文字色);
+  letter-spacing: 0;
+}
+
+/* ---------- 麻將牌 ---------- */
+.麻將牌 {
+  width: 40px;
+  height: 56px;
+  border: 1px solid #c9c2b2;
+  border-bottom-width: 3px;
+  border-radius: 6px;
+  background: linear-gradient(#ffffff, #f7f4ec);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  user-select: none;
+  position: relative;
+  transition: transform .08s ease, box-shadow .08s ease;
+}
+.麻將牌:hover { transform: translateY(-3px); box-shadow: 0 3px 6px rgba(0,0,0,.18); }
+.麻將牌:active { transform: translateY(0); }
+.麻將牌 .牌面數字 { font-size: 20px; font-weight: 700; line-height: 1; }
+.麻將牌 .牌面花色 { font-size: 11px; line-height: 1; letter-spacing: .04em; }
+.麻將牌 .牌面字 { font-size: 22px; font-weight: 700; line-height: 1.1; }
+.麻將牌.萬子 { color: var(--萬子色); }
+.麻將牌.筒子 { color: var(--筒子色); }
+.麻將牌.索子 { color: var(--索子色); }
+.麻將牌.字牌 { color: var(--字牌色); }
+.麻將牌.赤寶牌 {
+  color: var(--強調色);
+  border-color: var(--強調色);
+  background: linear-gradient(#fff6f4, #ffe9e4);
+}
+.麻將牌.小 { width: 30px; height: 42px; }
+.麻將牌.小 .牌面數字 { font-size: 15px; }
+.麻將牌.小 .牌面花色 { font-size: 9px; }
+.麻將牌.小 .牌面字 { font-size: 16px; }
+.麻將牌.停用 { opacity: .3; cursor: not-allowed; }
+.麻將牌.停用:hover { transform: none; box-shadow: none; }
+.麻將牌.和牌張 {
+  outline: 3px solid var(--強調色);
+  outline-offset: 1px;
+}
+
+/* ---------- 牌庫 ---------- */
+.牌庫花色列 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 5px;
+  align-items: center;
+}
+.牌庫花色列 .花色標籤 {
+  width: 34px;
+  font-size: 12px;
+  color: var(--次要文字色);
+}
+
+/* ---------- 手牌與副露 ---------- */
+.手牌列 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 54px;
+  padding: 6px;
+  background: #efece2;
+  border-radius: 8px;
+  align-items: flex-start;
+}
+.手牌空白提示 {
+  color: var(--次要文字色);
+  font-size: 13px;
+  padding: 16px 4px;
+}
+.牌與操作 { position: relative; }
+.移除鈕 {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--框線色);
+  background: #fff;
+  color: var(--次要文字色);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.移除鈕:hover { background: var(--強調色); color: #fff; border-color: var(--強調色); }
+
+.副露卡片 {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 7px 8px;
+  border: 1px dashed var(--框線色);
+  border-radius: 8px;
+  background: #faf8f2;
+  margin: 0 6px 6px 0;
+}
+.副露卡片 .副露標題 {
+  font-size: 11px;
+  color: var(--次要文字色);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.副露卡片 .副露牌列 { display: flex; gap: 3px; }
+.小型鈕 {
+  border: 1px solid var(--框線色);
+  background: #fff;
+  border-radius: 5px;
+  font-size: 11px;
+  font-family: inherit;
+  padding: 1px 6px;
+  cursor: pointer;
+  color: var(--次要文字色);
+}
+.小型鈕:hover { background: #efece2; }
+.小型鈕.啟用中 { background: var(--強調色); color: #fff; border-color: var(--強調色); }
+
+/* ---------- 設定 ---------- */
+.設定列 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+.設定項 { display: flex; align-items: center; gap: 7px; font-size: 13px; }
+.設定項 label { color: var(--次要文字色); }
+.數字輸入 {
+  width: 56px;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 4px 6px;
+  border: 1px solid var(--框線色);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--文字色);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.欄位單位 { font-size: 13px; color: var(--次要文字色); }
+
+select {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid var(--框線色);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--文字色);
+}
+.勾選格 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 5px 9px;
+}
+.勾選項 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.勾選項 input { accent-color: var(--主色); width: 15px; height: 15px; cursor: pointer; }
+.勾選項.不可用 { opacity: .4; cursor: not-allowed; }
+
+/* ---------- 計算按鈕與結果視窗 ---------- */
+.計算鈕 {
+  width: 100%;
+  padding: 11px 16px;
+  border: none;
+  border-radius: var(--圓角);
+  background: var(--主色);
+  color: #fff;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  cursor: pointer;
+  box-shadow: var(--陰影);
+  transition: background .12s ease;
+}
+.計算鈕:hover { background: var(--主色淺); }
+.計算鈕:disabled {
+  background: #ddd8cc;
+  color: #8d8676;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.結果視窗 {
+  width: calc(100% - 32px);
+  max-width: 560px;
+  max-height: 86vh;
+  padding: 0;
+  border: none;
+  border-radius: var(--圓角);
+  background: transparent;
+  overflow: visible;
+  box-shadow: 0 10px 36px rgba(35, 32, 27, .3);
+}
+.結果視窗::backdrop { background: rgba(35, 32, 27, .5); }
+.結果視窗 #結果內容 { outline: none; max-height: 86vh; overflow-y: auto; border-radius: var(--圓角); }
+.結果關閉鈕 {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: rgba(35, 32, 27, .35);
+  color: #fff;
+  font-family: inherit;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 1;
+}
+.結果關閉鈕:hover { background: rgba(35, 32, 27, .6); }
+
+/* ---------- 結果 ---------- */
+.結果標頭 {
+  background: var(--主色);
+  color: #fff;
+  border-radius: var(--圓角) var(--圓角) 0 0;
+  padding: 14px 16px;
+}
+.結果標頭 .級別 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  margin: 0;
+}
+.結果標頭 .番符 {
+  font-size: 14px;
+  opacity: .88;
+  margin: 2px 0 0;
+}
+.結果本體 {
+  background: var(--卡片底色);
+  border: 1px solid var(--框線色);
+  border-top: none;
+  border-radius: 0 0 var(--圓角) var(--圓角);
+  padding: 14px 16px;
+  box-shadow: var(--陰影);
+}
+.點數文字 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--強調色);
+  margin: 0 0 4px;
+}
+.收支說明 { font-size: 13px; color: var(--次要文字色); margin: 0 0 4px; }
+.本場說明 {
+  font-size: 12.5px;
+  color: var(--次要文字色);
+  margin: 0 0 14px;
+  padding: 4px 9px;
+  background: #f3f0e6;
+  border-radius: 6px;
+  display: inline-block;
+}
+.役清單 { list-style: none; margin: 0 0 14px; padding: 0; }
+.役清單 li {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dotted var(--框線色);
+  padding: 3px 0;
+  font-size: 14px;
+}
+.役清單 li.役滿項 { color: var(--強調色); font-weight: 700; }
+.役清單 li .番值 { font-variant-numeric: tabular-nums; color: var(--次要文字色); }
+.小標 {
+  font-size: 12px;
+  color: var(--次要文字色);
+  letter-spacing: .08em;
+  margin: 0 0 5px;
+  padding-top: 8px;
+  border-top: 1px solid var(--框線色);
+}
+.明細清單 { list-style: none; margin: 0 0 10px; padding: 0; font-size: 12.5px; color: var(--次要文字色); }
+.明細清單 li { display: flex; justify-content: space-between; padding: 1px 0; }
+.錯誤訊息 {
+  background: #fdf0ee;
+  border: 1px solid #e7bdb5;
+  color: var(--強調色);
+  border-radius: var(--圓角);
+  padding: 18px 52px 18px 18px;
+  font-size: 14px;
+  box-shadow: var(--陰影);
+}
+.錯誤原因 { margin: 0; font-weight: 600; line-height: 1.7; }
+.詐和罰符 {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #e7bdb5;
+}
+.罰符標題 { margin: 0; font-size: 12.5px; color: #8a5a52; }
+.罰符點數 { margin: 4px 0 2px; font-size: 22px; font-weight: 700; }
+.罰符收支 { margin: 0 0 10px; font-size: 13px; color: #8a5a52; }
+.罰符附註 { margin: 0; font-size: 12px; color: #9a7a73; line-height: 1.6; }
+
+/* ---------- 規則說明：標題旁的問號圈鈕與彈出視窗 ---------- */
+.說明圈鈕 {
+  flex: none;
+  width: 23px;
+  height: 23px;
+  padding: 0;
+  border: 1.5px solid var(--主色);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--主色);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .12s ease, color .12s ease;
+}
+.說明圈鈕:hover { background: var(--主色); color: #fff; }
+.說明圈鈕:focus-visible { outline: 2px solid var(--強調色); outline-offset: 2px; }
+
+.規則說明視窗 {
+  width: calc(100% - 32px);
+  max-width: 520px;
+  padding: 0;
+  border: 1px solid var(--框線色);
+  border-radius: var(--圓角);
+  background: var(--卡片底色);
+  color: var(--文字色);
+  box-shadow: 0 10px 36px rgba(35, 32, 27, .3);
+}
+.規則說明視窗::backdrop { background: rgba(35, 32, 27, .45); }
+.視窗標頭 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--主色);
+  color: #fff;
+  padding: 11px 14px 11px 18px;
+  border-radius: calc(var(--圓角) - 1px) calc(var(--圓角) - 1px) 0 0;
+}
+.視窗標頭 h2 { margin: 0; font-size: 16px; letter-spacing: .06em; }
+.視窗關閉鈕 {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #fff;
+  font-family: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.視窗關閉鈕:hover { background: rgba(255, 255, 255, .18); }
+.視窗關閉鈕:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
+.視窗內容:focus { outline: none; }
+.視窗內容 { padding: 14px 18px 18px; font-size: 13.5px; }
+.視窗內容 > p { margin: 0 0 8px; }
+.視窗內容 ul { margin: 0 0 12px; padding-left: 20px; color: var(--次要文字色); }
+.視窗內容 li { margin-bottom: 5px; }
+.視窗附註 {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--框線色);
+  color: var(--次要文字色);
+  font-size: 12.5px;
+}
+
+.區塊附註 {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  color: var(--次要文字色);
+}
+.區塊附註.裏寶牌生效 { color: var(--主色); font-weight: 600; }
+
+.加入目標提示 { font-size: 12px; color: var(--次要文字色); margin: 8px 0 0; }
+.一般按鈕 {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--框線色);
+  background: #fbf9f4;
+  cursor: pointer;
+}
+.一般按鈕:hover { background: #efece2; }
+.頁首按鈕 { margin-left: auto; flex: none; font-size: 13px; font-weight: 400; letter-spacing: 0; }
+
+/* 窄螢幕把牌縮小，讓一列放得下九張 */
+@media (max-width: 560px) {
+  .整體容器 { padding: 16px 10px 48px; }
+  .區塊 { padding: 12px 10px; }
+  .麻將牌 { width: 32px; height: 45px; }
+  .麻將牌 .牌面數字 { font-size: 16px; }
+  .麻將牌 .牌面花色 { font-size: 9px; }
+  .麻將牌 .牌面字 { font-size: 18px; }
+  .麻將牌.小 { width: 26px; height: 36px; }
+  .麻將牌.小 .牌面數字 { font-size: 13px; }
+  .麻將牌.小 .牌面字 { font-size: 14px; }
+  .牌庫花色列 { gap: 3px; }
+  .牌庫花色列 .花色標籤 { width: 28px; font-size: 11px; }
+  .手牌列 { gap: 3px; padding: 6px; }
+  .勾選格 { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+  .頁首 h1 { font-size: 20px; }
+  .視窗內容 { padding: 12px 14px 16px; }
+}
+
+/* 平板橫擺：牌與間距再縮一號，讓整頁在一個畫面內放得下，不必捲動 */
+@media (min-width: 901px) and (max-width: 1400px) {
+  .麻將牌 { width: 33px; height: 46px; }
+  .麻將牌 .牌面數字 { font-size: 17px; }
+  .麻將牌 .牌面花色 { font-size: 9px; }
+  .麻將牌 .牌面字 { font-size: 19px; }
+  .牌庫花色列 { gap: 4px; margin-bottom: 4px; }
+  .牌庫花色列 .花色標籤 { width: 30px; font-size: 11px; }
+  .手牌列 { gap: 3px; min-height: 50px; }
+  .區塊 { padding: 8px 12px; margin-bottom: 9px; }
+  .區塊 > h2 { margin-bottom: 5px; }
+  .副露種類列 { min-height: 96px; }
+  .計算鈕 { padding: 9px 16px; font-size: 16px; }
+}
+
+/* 螢幕特別矮的橫擺（分割畫面、舊款平板）再縮一級 */
+@media (min-width: 901px) and (max-height: 640px) {
+  .麻將牌 { width: 30px; height: 42px; }
+  .麻將牌 .牌面數字 { font-size: 15px; }
+  .麻將牌 .牌面字 { font-size: 17px; }
+  .手牌列 { min-height: 46px; padding: 5px; }
+  .區塊 { padding: 6px 11px; margin-bottom: 7px; }
+  .頁首 { padding-bottom: 6px; margin-bottom: 9px; }
+  .頁首 h1 { font-size: 19px; }
+  .副露種類列 { min-height: 88px; }
+  .計算鈕 { padding: 7px 16px; font-size: 15px; }
+}
+
+/* 手機直式與平板直擺改成上下排 */
+@media (max-width: 900px) {
+  .雙欄版面 { grid-template-columns: minmax(0, 1fr); }
+}
