@@ -1,4 +1,4 @@
-const 引擎 = require('../手牌計算引擎.js');
+const 引擎 = require('../scoring-engine.js');
 
 function 建立條件(覆寫) {
   return Object.assign({
