@@ -277,28 +277,13 @@ function 渲染剩餘張數() {
   const 還要張數 = 14 - 已決定張數;
   const 容器 = document.getElementById('剩餘張數顯示');
   容器.textContent = '';
-  if (還要張數 <= 0) {
-    容器.className = '剩餘張數 已湊齊';
-    const 數字元素 = document.createElement('span');
-    數字元素.className = '張數';
-    數字元素.textContent = '14';
-    const 後綴 = document.createElement('span');
-    後綴.textContent = '張已湊齊';
-    容器.appendChild(數字元素);
-    容器.appendChild(後綴);
-    return;
-  }
-  容器.className = '剩餘張數';
-  const 前綴 = document.createElement('span');
-  前綴.textContent = '還要';
+  const 湊齊了 = 還要張數 <= 0;
+  容器.className = 湊齊了 ? '剩餘張數 已湊齊' : '剩餘張數';
+  容器.title = 湊齊了 ? '十四張已經湊齊' : `還要 ${還要張數} 張`;
   const 張數元素 = document.createElement('span');
   張數元素.className = '張數';
-  張數元素.textContent = 還要張數;
-  const 後綴 = document.createElement('span');
-  後綴.textContent = '張';
-  容器.appendChild(前綴);
+  張數元素.textContent = 湊齊了 ? 0 : 還要張數;
   容器.appendChild(張數元素);
-  容器.appendChild(後綴);
 }
 
 function 渲染牌庫() {

@@ -170,15 +170,13 @@ button,
 }
 .剩餘張數 {
   display: inline-flex;
-  align-items: baseline;
-  gap: 4px;
-  font-weight: 400;
-  font-size: 13px;
-  color: var(--次要文字色);
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
   background: #f3f0e6;
   border: 1px solid var(--框線色);
   border-radius: 999px;
-  padding: 2px 12px;
+  padding: 1px 10px;
   letter-spacing: 0;
 }
 .剩餘張數 .張數 {
@@ -186,6 +184,7 @@ button,
   font-weight: 700;
   color: var(--強調色);
   font-variant-numeric: tabular-nums;
+  line-height: 1.25;
 }
 .剩餘張數.已湊齊 {
   background: #e9f1ec;
