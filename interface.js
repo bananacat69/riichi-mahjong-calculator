@@ -279,7 +279,13 @@ function 渲染剩餘張數() {
   容器.textContent = '';
   if (還要張數 <= 0) {
     容器.className = '剩餘張數 已湊齊';
-    容器.textContent = '十四張已湊齊';
+    const 數字元素 = document.createElement('span');
+    數字元素.className = '張數';
+    數字元素.textContent = '14';
+    const 後綴 = document.createElement('span');
+    後綴.textContent = '張已湊齊';
+    容器.appendChild(數字元素);
+    容器.appendChild(後綴);
     return;
   }
   容器.className = '剩餘張數';

@@ -169,7 +169,6 @@ button,
   gap: 8px;
 }
 .剩餘張數 {
-  margin-left: auto;
   display: inline-flex;
   align-items: baseline;
   gap: 4px;
@@ -193,6 +192,7 @@ button,
   border-color: #bcd6c7;
   color: var(--主色);
 }
+.剩餘張數.已湊齊 .張數 { color: var(--主色); }
 
 .區塊 > h2 .說明 {
   font-size: 12px;
