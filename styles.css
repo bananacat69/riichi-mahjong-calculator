@@ -37,8 +37,6 @@ input,
 label,
 dialog,
 .麻將牌,
-.浮動圈,
-.浮動種類圈,
 .區塊.可選取 {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -367,69 +365,6 @@ select {
 .勾選項 input { accent-color: var(--主色); width: 15px; height: 15px; cursor: pointer; }
 .勾選項.不可用 { opacity: .4; cursor: not-allowed; }
 
-/* ---------- 小裝置的浮動快捷鈕 ---------- */
-/* 單欄時牌庫在上、三個目標框在下，捲來捲去很麻煩，右下角放一組圈圈直接切換 */
-.浮動目標列 {
-  display: none;
-  position: fixed;
-  right: 14px;
-  bottom: 14px;
-  z-index: 50;
-  align-items: flex-end;
-  gap: 9px;
-}
-.浮動主圈列 {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-}
-.浮動圈 {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  border: 2px solid var(--主色);
-  background: rgba(255, 255, 255, .95);
-  color: var(--主色);
-  font-family: inherit;
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: 0 2px 10px rgba(35, 32, 27, .28);
-  padding: 0;
-}
-.浮動圈.選取中 {
-  background: var(--主色);
-  color: #fff;
-  box-shadow: 0 3px 14px rgba(31, 74, 58, .5);
-}
-/* 副露的四個種類排在「露」的左邊，底部對齊 */
-.浮動種類列 {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-.浮動種類圈 {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 1px solid var(--框線色);
-  background: rgba(255, 255, 255, .95);
-  color: var(--次要文字色);
-  font-family: inherit;
-  font-size: 15px;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(35, 32, 27, .2);
-  padding: 0;
-}
-.浮動種類圈.選取中 {
-  background: var(--強調色);
-  border-color: var(--強調色);
-  color: #fff;
-  font-weight: 700;
-}
-
 /* ---------- 計算按鈕與結果視窗 ---------- */
 .計算鈕 {
   width: 100%;
@@ -708,10 +643,7 @@ select {
   .計算鈕 { padding: 7px 16px; font-size: 15px; }
 }
 
-/* 手機直式與平板直擺改成上下排，並開啟右下角的浮動快捷鈕 */
+/* 手機直式與平板直擺改成上下排 */
 @media (max-width: 900px) {
   .雙欄版面 { grid-template-columns: minmax(0, 1fr); }
-  .浮動目標列 { display: flex; }
-  /* 捲到底時不要被浮動鈕壓到計算按鈕 */
-  .整體容器 { padding-bottom: 86px; }
 }
