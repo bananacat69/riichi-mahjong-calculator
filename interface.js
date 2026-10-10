@@ -212,8 +212,50 @@ function 渲染區塊選取狀態() {
     區塊.classList.toggle('選取中', 被選中);
   }
   渲染副露種類列();
+  渲染目標快捷列();
   document.getElementById('加入目標提示').textContent =
     加入目標說明表[畫面狀態.加入目標] + 取得牌庫停用原因();
+}
+
+/**
+ * 牌庫標題旁的快捷切換，動作與點右邊那四個框一模一樣。
+ * 手機是上下單欄，有這排就不必捲到下面去換目標。
+ */
+function 渲染目標快捷列() {
+  const 容器 = document.getElementById('目標快捷列');
+  容器.textContent = '';
+  const 目前是副露 = 副露種類清單.includes(畫面狀態.加入目標);
+
+  for (const 目標 of [{ 代號: '寶牌', 名稱: '寶牌' }, { 代號: '和牌張', 名稱: '和牌張' }, { 代號: '手牌', 名稱: '手牌' }]) {
+    const 按鈕 = document.createElement('button');
+    按鈕.type = 'button';
+    按鈕.className = '目標快捷鈕' + (畫面狀態.加入目標 === 目標.代號 ? ' 選取中' : '');
+    按鈕.textContent = 目標.名稱;
+    按鈕.title = `接下來點的牌加到${目標.名稱}`;
+    按鈕.addEventListener('click', () => {
+      畫面狀態.加入目標 = 目標.代號;
+      重新渲染全部();
+    });
+    容器.appendChild(按鈕);
+  }
+
+  const 副露選單 = document.createElement('select');
+  副露選單.className = '目標快捷選單' + (目前是副露 ? ' 選取中' : '');
+  副露選單.title = '副露：選吃、碰、明槓或暗槓';
+  if (!目前是副露) {
+    副露選單.add(new Option('副露', ''));
+  }
+  for (const 種類 of 副露種類清單) {
+    副露選單.add(new Option(種類, 種類));
+  }
+  副露選單.value = 目前是副露 ? 畫面狀態.加入目標 : '';
+  副露選單.addEventListener('change', () => {
+    if (副露選單.value === '') return;
+    畫面狀態.副露種類 = 副露選單.value;
+    畫面狀態.加入目標 = 副露選單.value;
+    重新渲染全部();
+  });
+  容器.appendChild(副露選單);
 }
 
 /** 副露框裡再選吃、碰、明槓、暗槓 */
