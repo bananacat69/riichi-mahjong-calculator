@@ -92,6 +92,16 @@ button,
   margin-bottom: 11px;
   box-shadow: var(--陰影);
 }
+/* 寶牌與和牌張並排成一列 */
+.並排區 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 172px;
+  gap: 11px;
+  align-items: stretch;
+  margin-bottom: 11px;
+}
+.並排區 > .區塊 { margin-bottom: 0; }
+
 /* 右邊三個框點了就是選定加入目標 */
 .區塊.可選取 { cursor: pointer; }
 .區塊.可選取:hover { border-color: var(--主色淺); }
@@ -634,6 +644,8 @@ select {
   .牌庫花色列 .花色標籤 { width: 30px; font-size: 11px; }
   .手牌列 { gap: 3px; min-height: 50px; }
   .區塊 { padding: 8px 12px; margin-bottom: 9px; }
+  .並排區 { gap: 9px; margin-bottom: 9px; }
+  .並排區 > .區塊 { margin-bottom: 0; }
   .區塊 > h2 { margin-bottom: 5px; }
   .副露種類列 { min-height: 96px; }
   .計算鈕 { padding: 9px 16px; font-size: 16px; }
@@ -655,4 +667,6 @@ select {
 /* 手機直式與平板直擺改成上下排 */
 @media (max-width: 900px) {
   .雙欄版面 { grid-template-columns: minmax(0, 1fr); }
+  .並排區 { grid-template-columns: minmax(0, 1fr); gap: 0; margin-bottom: 0; }
+  .並排區 > .區塊 { margin-bottom: 11px; }
 }
