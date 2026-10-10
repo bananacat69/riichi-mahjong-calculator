@@ -24,6 +24,33 @@ body {
   font-family: "Hiragino Sans", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
   font-size: 15px;
   line-height: 1.6;
+  /* 平板、手機上連點兩下不要放大畫面；雙指縮放仍然可用 */
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* 可以點的元素逐一指定，避免某些瀏覽器只看元素自身的設定。
+   彈出視窗會脫離原本的堆疊脈絡，也要自己指定一次 */
+button,
+select,
+input,
+label,
+dialog,
+.麻將牌,
+.區塊.可選取 {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 連點時不要把文字反白選起來，也不要跳出放大鏡。結果視窗裡的字不在此列，仍然可以複製 */
+button,
+.區塊.可選取,
+.區塊 > h2,
+.勾選項,
+.剩餘張數,
+.花色標籤 {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .整體容器 {
