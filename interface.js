@@ -13,7 +13,7 @@ const 加入目標說明表 = {
   明槓: '目前要明槓。大明槓與加槓都算明槓。',
   暗槓: '目前要暗槓。暗槓不破壞門前，立直後仍可保有門前役。',
   寶牌: '目前要加到寶牌。直接點寶牌本身，有幾張就點幾張，每張各算一番。',
-  和牌張: '目前要指定和牌張。和牌的那一張單獨放在寶牌右邊的格子，只能放一張。'
+  和牌張: '目前要指定和牌張。和牌的那一張單獨放在和牌張框，只能放一張。'
 };
 
 const 副露種類清單 = ['吃', '碰', '明槓', '暗槓'];
@@ -240,7 +240,6 @@ function 綁定區塊選取() {
   for (const 區塊編號 of ['寶牌區塊', '和牌張區塊', '手牌區塊', '副露區塊']) {
     const 區塊 = document.getElementById(區塊編號);
     區塊.addEventListener('click', (事件) => {
-      // 和牌張格包在寶牌區塊裡面，點它不要連帶把目標切成寶牌
       事件.stopPropagation();
       const 目標 = 區塊.dataset['加入目標'];
       畫面狀態.加入目標 = 目標 === '副露' ? 畫面狀態.副露種類 : 目標;
@@ -449,14 +448,14 @@ function 渲染和牌張() {
   容器.textContent = '';
   if (畫面狀態.和牌張 === null) {
     const 提示 = document.createElement('span');
-    提示.className = '和牌張空白提示';
-    提示.textContent = '尚未指定';
+    提示.className = '手牌空白提示';
+    提示.textContent = '尚未指定和牌張。';
     容器.appendChild(提示);
     return;
   }
   const 包裝 = document.createElement('span');
   包裝.className = '牌與操作';
-  const 牌元素 = 建立牌元素(畫面狀態.和牌張.牌編號, 畫面狀態.和牌張.是赤寶牌, { 尺寸小: true });
+  const 牌元素 = 建立牌元素(畫面狀態.和牌張.牌編號, 畫面狀態.和牌張.是赤寶牌);
   牌元素.classList.add('和牌張');
   牌元素.title = 計算引擎.牌名稱表[畫面狀態.和牌張.牌編號] + '：和牌的那一張';
   牌元素.disabled = true;
