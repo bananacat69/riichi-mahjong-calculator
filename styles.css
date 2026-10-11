@@ -1167,3 +1167,37 @@ select {
   .並排區 { grid-template-columns: minmax(0, 1fr); gap: 0; margin-bottom: 0; }
   .並排區 > .區塊 { margin-bottom: 11px; }
 }
+
+/* 手機直放：四個標籤改成在畫面上緣水平置中排一列，由左到右是齒輪、計算機、問號、扳手；
+   側邊欄改成從上方滑下、寬度蓋滿，高度依內容、最多留出標籤的高度，標籤跟著移到側邊欄下緣。
+   側邊欄目前的高度由程式寫進 --目前側邊欄高度。放在檔案最後，蓋過前面左側版的位置設定 */
+.起始值標籤 { --標籤序: 0; }
+.計算標籤 { --標籤序: 1; }
+.規則說明標籤 { --標籤序: 2; }
+.調整點數標籤 { --標籤序: 3; }
+@media (max-width: 560px) and (orientation: portrait) {
+  .側邊欄 {
+    bottom: auto;
+    width: 100vw;
+    max-height: calc(100dvh - 46px);
+    box-shadow: 0 4px 24px rgba(35, 32, 27, .25);
+    transform: translateY(-100%);
+  }
+  .側邊欄.打開 { transform: none; }
+  .側邊欄標籤 {
+    --標籤寬度: 50px;
+    --標籤高度: 38px;
+    --標籤間距: 6px;
+    top: 0;
+    left: calc(50% - (var(--標籤寬度) * 4 + var(--標籤間距) * 3) / 2 + var(--標籤序) * (var(--標籤寬度) + var(--標籤間距)));
+    border: 1px solid var(--框線色);
+    border-top: none;
+    border-radius: 0 0 var(--圓角) var(--圓角);
+    transform: none;
+    transition: top .25s ease;
+  }
+  .側邊欄標籤[aria-expanded="true"] {
+    top: var(--目前側邊欄高度, 0px);
+    left: calc(50% - (var(--標籤寬度) * 4 + var(--標籤間距) * 3) / 2 + var(--標籤序) * (var(--標籤寬度) + var(--標籤間距)));
+  }
+}

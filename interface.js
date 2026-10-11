@@ -1046,8 +1046,19 @@ function 綁定側邊欄(取得目前局況) {
     遮罩.hidden = 要打開的 === null;
   }
 
+  // 手機直放時側邊欄從上方滑下，標籤要貼在它的下緣，所以把打開那個側邊欄的高度寫進 CSS 變數；
+  // 內容變動（例如計算側邊欄加牌）讓高度改變時也跟著更新
+  const 更新側邊欄高度 = () => {
+    if (目前打開 === null) return;
+    document.documentElement.style.setProperty('--目前側邊欄高度', `${目前打開.側邊欄.offsetHeight}px`);
+  };
+  const 側邊欄高度觀察 = new ResizeObserver(更新側邊欄高度);
   側邊欄清單.forEach((項目) => {
-    項目.標籤.addEventListener('click', () => 切換到(目前打開 === 項目 ? null : 項目));
+    側邊欄高度觀察.observe(項目.側邊欄);
+    項目.標籤.addEventListener('click', () => {
+      切換到(目前打開 === 項目 ? null : 項目);
+      更新側邊欄高度();
+    });
   });
   遮罩.addEventListener('click', () => 切換到(null));
   document.addEventListener('keydown', (事件) => {
