@@ -7,142 +7,14 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<!-- 主畫面是位置模式；計算與設定起始值收在左邊的兩個側邊欄，用左緣的計算機、齒輪標籤打開或收合 -->
 <div class="整體容器" id="整體容器">
 
-  <header class="頁首">
-    <h1>
-      <button type="button" class="一般按鈕 模式切換鈕" id="模式切換鈕">切換到位置</button>
-      <span class="標題文字">日本麻將 番數與點數計算</span>
-      <button type="button" class="說明圈鈕" id="開啟規則說明鈕" aria-label="查看採用的規則細節" title="查看採用的規則細節">?</button>
-      <button type="button" class="一般按鈕 頁首按鈕" id="全部重設鈕">全部重設</button>
-      <button type="button" class="一般按鈕 局數重置鈕" id="局數重置鈕" hidden>重置</button>
-    </h1>
+  <header class="位置頁首">
+    <button type="button" class="一般按鈕 局數重置鈕" id="局數重置鈕">重置</button>
   </header>
 
-  <dialog class="規則說明視窗" id="規則說明視窗">
-    <div class="視窗標頭">
-      <h2>採用的規則細節</h2>
-      <button type="button" class="視窗關閉鈕" id="關閉規則說明鈕" aria-label="關閉">×</button>
-    </div>
-    <div class="視窗內容" id="規則說明內容" tabindex="-1">
-      <p>規則基準是雀魂／天鳳標準，兩者有差異時以雀魂為準。</p>
-      <ul>
-        <li>吃碰後仍可和斷么九（食斷有）。</li>
-        <li>赤寶牌每張一番；寶牌本身不算役，沒有役就不能和牌。</li>
-        <li>十三番以上算累計役滿；沒有切上滿貫，四番三十符是 7700 點而不是滿貫。</li>
-        <li>役滿一律一倍，不同役滿同時成立時倍數相加（不採用雙倍役滿）。</li>
-        <li>場風與自風相同的連風牌當雀頭算四符（雀魂規則；天鳳與競技團體算兩符）。</li>
-        <li>七對子固定二十五符，平和自摸固定二十符，副露平和型榮和固定三十符。</li>
-        <li>榮和時完成最後一組面子的那張牌算明刻，不計入暗刻。</li>
-        <li>同一副手牌有多種拆法時，取點數最高的一種。</li>
-      </ul>
-      <p class="視窗附註">未涵蓋：流局滿貫、人和、三家和、包牌責任制與各種地方役。</p>
-    </div>
-  </dialog>
-
-  <dialog class="結果視窗" id="結果視窗">
-    <button type="button" class="結果關閉鈕" id="關閉結果鈕" aria-label="關閉">×</button>
-    <div id="結果內容" tabindex="-1"></div>
-  </dialog>
-
-  <div class="雙欄版面" id="計算模式畫面">
-    <div class="操作欄">
-
-      <section class="區塊">
-        <h2>一、基本設定</h2>
-        <div class="設定列">
-          <div class="設定項">
-            <label for="場風選單">場風</label>
-            <select id="場風選單">
-              <option value="27">東</option>
-              <option value="28">南</option>
-              <option value="29">西</option>
-              <option value="30">北</option>
-            </select>
-          </div>
-          <div class="設定項">
-            <label for="自風選單">自風</label>
-            <select id="自風選單">
-              <option value="27">東（莊家）</option>
-              <option value="28" selected>南（子家）</option>
-              <option value="29">西（子家）</option>
-              <option value="30">北（子家）</option>
-            </select>
-          </div>
-          <div class="設定項">
-            <label for="連莊數選單">連莊數</label>
-            <select id="連莊數選單">
-              <option value="0">0</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-              <option value="6">6</option>
-              <option value="7">7</option>
-              <option value="8">8</option>
-              <option value="9">9</option>
-              <option value="10">10</option>
-            </select>
-            <span class="欄位單位">本場</span>
-          </div>
-          <div class="設定項">
-            <span class="欄位標題">和牌方式</span>
-            <div class="和牌方式鈕組" id="和牌方式鈕組"></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="區塊">
-        <h2>二、和牌狀況 <span class="說明">不符合條件的項目會自動停用</span></h2>
-        <div class="勾選格" id="和牌狀況格"></div>
-      </section>
-
-      <section class="區塊">
-        <h2>三、點牌 <span class="剩餘張數" id="剩餘張數顯示"></span>
-          <span class="目標快捷列" id="目標快捷列"></span>
-        </h2>
-        <div id="牌庫區"></div>
-        <p class="加入目標提示" id="加入目標提示"></p>
-      </section>
-
-    </div>
-
-    <div class="展示欄">
-
-      <div class="並排區">
-        <section class="區塊 可選取" id="寶牌區塊" data-加入目標="寶牌">
-          <h2>寶牌 <span class="說明">填寶牌、有立直才填裏寶牌</span></h2>
-          <div class="手牌列" id="寶牌列"></div>
-          <p class="區塊附註" id="寶牌說明"></p>
-        </section>
-
-        <section class="區塊 可選取" id="和牌張區塊" data-加入目標="和牌張">
-          <h2>和牌張 <span class="說明">只放一張</span></h2>
-          <div class="手牌列" id="和牌張列"></div>
-        </section>
-      </div>
-
-      <section class="區塊 可選取" id="手牌區塊" data-加入目標="手牌">
-        <h2>手牌 <span class="說明">放和牌張以外的牌，點右上角 × 移除</span></h2>
-        <div class="手牌列" id="手牌列"></div>
-      </section>
-
-      <section class="區塊 可選取" id="副露區塊" data-加入目標="副露">
-        <h2>副露</h2>
-        <div class="副露與種類">
-          <div class="副露框" id="副露列"></div>
-          <div class="副露種類列" id="副露種類列"></div>
-        </div>
-        <p class="區塊附註">吃是以點到的牌為最小張組成順子；暗槓不破壞門前。</p>
-      </section>
-
-      <button type="button" class="計算鈕" id="計算鈕"></button>
-
-    </div>
-  </div>
-
-  <div class="位置模式畫面" id="位置模式畫面" hidden>
+  <div class="位置模式畫面" id="位置模式畫面">
     <div class="風位桌面" id="風位桌面">
       <div class="桌邊長方形 下邊" data-座位="下"></div>
       <div class="桌邊長方形 右邊" data-座位="右"></div>
@@ -161,6 +33,13 @@
             <path d="M3 7.5 7.5 12 12 5l4.5 7L21 7.5 19 18H5Z" />
           </svg>
         </button>
+      </div>
+      <!-- 四家點數與名稱跟著座位（人）不跟著自風轉，放在各自長方形延伸出來那一格，朝向坐在那一邊的人；名稱有填才顯示在點數上方，計算結果確認後的增減量短暫顯示在點數下方 -->
+      <div class="點數層" id="點數層">
+        <span class="點數位 下方" data-座位="下"><span class="點數框"><span class="玩家名稱" hidden></span><span class="點數數字"></span><span class="點數增減" hidden></span></span></span>
+        <span class="點數位 右方" data-座位="右"><span class="點數框"><span class="玩家名稱" hidden></span><span class="點數數字"></span><span class="點數增減" hidden></span></span></span>
+        <span class="點數位 上方" data-座位="上"><span class="點數框"><span class="玩家名稱" hidden></span><span class="點數數字"></span><span class="點數增減" hidden></span></span></span>
+        <span class="點數位 左方" data-座位="左"><span class="點數框"><span class="玩家名稱" hidden></span><span class="點數數字"></span><span class="點數增減" hidden></span></span></span>
       </div>
       <!-- 中央區整塊轉向莊家，換莊時跟著自風字一起逆時針轉 -->
       <div class="桌面中央" id="桌面中央">
@@ -201,6 +80,227 @@
   </div>
 
 </div>
+
+<!-- 側邊欄打開時蓋住位置模式的半透明遮罩，點一下收合 -->
+<div class="側邊欄遮罩" id="側邊欄遮罩" hidden></div>
+
+<aside class="側邊欄 計算側邊欄" id="計算側邊欄" aria-label="番數與點數計算" inert>
+  <div class="側邊欄內容">
+
+    <header class="頁首">
+      <h1>
+        <span class="標題文字">日本麻將 番數與點數計算</span>
+        <button type="button" class="一般按鈕 頁首按鈕" id="清空鈕">清空</button>
+      </h1>
+    </header>
+
+    <div class="雙欄版面" id="計算模式畫面">
+      <div class="操作欄">
+
+        <section class="區塊">
+          <h2>一、基本設定</h2>
+          <div class="設定列">
+            <div class="設定項">
+              <label for="場風選單">場風</label>
+              <select id="場風選單">
+                <option value="27">東</option>
+                <option value="28">南</option>
+                <option value="29">西</option>
+                <option value="30">北</option>
+              </select>
+            </div>
+            <div class="設定項">
+              <label for="自風選單">和牌者</label>
+              <!-- 和牌者的自風，一開始不預設；選項文字由程式填：風（人名） -->
+              <select id="自風選單"></select>
+            </div>
+            <div class="設定項">
+              <label for="連莊數選單">連莊數</label>
+              <select id="連莊數選單">
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+              </select>
+              <span class="欄位單位">本場</span>
+            </div>
+            <div class="設定項">
+              <span class="欄位標題">和牌方式</span>
+              <div class="和牌方式鈕組" id="和牌方式鈕組"></div>
+              <!-- 選榮和才出現；選項是和牌者以外的三家，文字與和牌者選單相同 -->
+              <select id="放銃者選單" aria-label="放銃者" hidden></select>
+            </div>
+          </div>
+        </section>
+
+        <section class="區塊">
+          <h2>二、和牌狀況 <span class="說明">不符合條件的項目會自動停用</span></h2>
+          <div class="勾選格" id="和牌狀況格"></div>
+        </section>
+
+        <section class="區塊">
+          <h2>三、點牌 <span class="剩餘張數" id="剩餘張數顯示"></span>
+            <span class="目標快捷列" id="目標快捷列"></span>
+          </h2>
+          <div id="牌庫區"></div>
+          <p class="加入目標提示" id="加入目標提示"></p>
+        </section>
+
+      </div>
+
+      <div class="展示欄">
+
+        <div class="並排區">
+          <section class="區塊 可選取" id="寶牌區塊" data-加入目標="寶牌">
+            <h2>寶牌 <span class="說明">填寶牌、有立直才填裏寶牌</span></h2>
+            <div class="手牌列" id="寶牌列"></div>
+            <p class="區塊附註" id="寶牌說明"></p>
+          </section>
+
+          <section class="區塊 可選取" id="和牌張區塊" data-加入目標="和牌張">
+            <h2>和牌張 <span class="說明">只放一張</span></h2>
+            <div class="手牌列" id="和牌張列"></div>
+          </section>
+        </div>
+
+        <section class="區塊 可選取" id="手牌區塊" data-加入目標="手牌">
+          <h2>手牌 <span class="說明">放和牌張以外的牌，點右上角 × 移除</span></h2>
+          <div class="手牌列" id="手牌列"></div>
+        </section>
+
+        <section class="區塊 可選取" id="副露區塊" data-加入目標="副露">
+          <h2>副露</h2>
+          <div class="副露與種類">
+            <div class="副露框" id="副露列"></div>
+            <div class="副露種類列" id="副露種類列"></div>
+          </div>
+          <p class="區塊附註">吃是以點到的牌為最小張組成順子；暗槓不破壞門前。</p>
+        </section>
+
+        <button type="button" class="計算鈕" id="計算鈕"></button>
+
+      </div>
+    </div>
+
+  </div>
+</aside>
+
+<!-- 起始點數：加減一次 1000，按確認後跳出確認視窗，同意才把四家點數都改成這個數字；右上的重置也用這個數字 -->
+<aside class="側邊欄 起始值側邊欄" id="起始值側邊欄" aria-label="設定起始值" inert>
+  <div class="側邊欄內容">
+    <header class="頁首">
+      <h1><span class="標題文字">設定起始值</span></h1>
+    </header>
+    <div class="起始點數內容">
+      <span class="起始點數標題">起始點數</span>
+      <div class="起始點數調整列">
+        <button type="button" class="一般按鈕 起始點數加減鈕" id="起始點數減少鈕" aria-label="起始點數減 1000">−</button>
+        <span class="起始點數數字" id="起始點數數字" aria-live="polite"></span>
+        <button type="button" class="一般按鈕 起始點數加減鈕" id="起始點數增加鈕" aria-label="起始點數加 1000">+</button>
+      </div>
+      <button type="button" class="一般按鈕 起始點數確認鈕" id="起始點數確認鈕">確認</button>
+    </div>
+    <!-- 四家名稱以東一局開局時的自風稱呼：起始東坐下方、起始南坐右邊、起始西坐上方、起始北坐左邊；輸入後立刻顯示在桌面的點數上方 -->
+    <div class="四家名稱內容">
+      <span class="起始點數標題">四家名稱</span>
+      <label class="名稱輸入列">起始東<input type="text" class="名稱輸入框" data-座位="下" maxlength="8" autocomplete="off"></label>
+      <label class="名稱輸入列">起始南<input type="text" class="名稱輸入框" data-座位="右" maxlength="8" autocomplete="off"></label>
+      <label class="名稱輸入列">起始西<input type="text" class="名稱輸入框" data-座位="上" maxlength="8" autocomplete="off"></label>
+      <label class="名稱輸入列">起始北<input type="text" class="名稱輸入框" data-座位="左" maxlength="8" autocomplete="off"></label>
+    </div>
+  </div>
+</aside>
+
+<aside class="側邊欄 規則說明側邊欄" id="規則說明側邊欄" aria-label="採用的規則細節" inert>
+  <div class="側邊欄內容">
+    <header class="頁首">
+      <h1><span class="標題文字">採用的規則細節</span></h1>
+    </header>
+    <div class="規則說明內容">
+      <p>規則基準是雀魂／天鳳標準，兩者有差異時以雀魂為準。</p>
+      <ul>
+        <li>吃碰後仍可和斷么九（食斷有）。</li>
+        <li>赤寶牌每張一番；寶牌本身不算役，沒有役就不能和牌。</li>
+        <li>十三番以上算累計役滿；沒有切上滿貫，四番三十符是 7700 點而不是滿貫。</li>
+        <li>役滿一律一倍，不同役滿同時成立時倍數相加（不採用雙倍役滿）。</li>
+        <li>場風與自風相同的連風牌當雀頭算四符（雀魂規則；天鳳與競技團體算兩符）。</li>
+        <li>七對子固定二十五符，平和自摸固定二十符，副露平和型榮和固定三十符。</li>
+        <li>榮和時完成最後一組面子的那張牌算明刻，不計入暗刻。</li>
+        <li>同一副手牌有多種拆法時，取點數最高的一種。</li>
+      </ul>
+      <p class="視窗附註">未涵蓋：流局滿貫、人和、三家和、包牌責任制與各種地方役。</p>
+    </div>
+  </div>
+</aside>
+
+<!-- 調整點數：四家各一列，名稱、點數與 −1000、−100、+100、+1000 四顆鈕，列由程式產生；按確認跳出確認視窗，同意才改桌面點數 -->
+<aside class="側邊欄 調整點數側邊欄" id="調整點數側邊欄" aria-label="調整點數" inert>
+  <div class="側邊欄內容">
+    <header class="頁首">
+      <h1>
+        <span class="標題文字">調整點數</span>
+        <!-- 調整後四家總分與開局總分（起始點數乘四）的差距 -->
+        <span class="調整點數總差" id="調整點數總差"></span>
+      </h1>
+    </header>
+    <div class="調整點數清單" id="調整點數清單"></div>
+    <button type="button" class="一般按鈕 起始點數確認鈕 調整點數確認鈕" id="調整點數確認鈕">確認</button>
+  </div>
+</aside>
+
+<!-- 側邊欄的開關標籤，收合時貼在畫面左緣，由上到下是齒輪、計算機、問號、扳手；打開時跟著側邊欄的右緣，其他標籤先隱藏 -->
+<button type="button" class="側邊欄標籤 起始值標籤" id="起始值側邊欄標籤" aria-controls="起始值側邊欄" aria-expanded="false" aria-label="打開設定起始值" title="打開設定起始值">
+  <!-- 齒輪：外圈八個齒加中間的圓孔 -->
+  <svg class="側邊欄標籤圖示" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+</button>
+<button type="button" class="側邊欄標籤 計算標籤" id="計算側邊欄標籤" aria-controls="計算側邊欄" aria-expanded="false" aria-label="打開計算" title="打開計算">
+  <!-- 計算機：外框、螢幕、三乘三按鍵 -->
+  <svg class="側邊欄標籤圖示" viewBox="0 0 24 24" aria-hidden="true">
+    <rect x="5" y="2.5" width="14" height="19" rx="2.5" />
+    <rect x="8" y="5.5" width="8" height="3.5" rx=".8" />
+    <path d="M8.5 12.5h.01M12 12.5h.01M15.5 12.5h.01M8.5 15.5h.01M12 15.5h.01M15.5 15.5h.01M8.5 18.5h.01M12 18.5h.01M15.5 18.5h.01" />
+  </svg>
+</button>
+<button type="button" class="側邊欄標籤 規則說明標籤" id="規則說明側邊欄標籤" aria-controls="規則說明側邊欄" aria-expanded="false" aria-label="打開採用的規則細節" title="打開採用的規則細節">
+  <!-- 問號：外圈加問號 -->
+  <svg class="側邊欄標籤圖示" viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="12" r="9.5" />
+    <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-2.9 3-2.9 3" />
+    <path d="M12 17h.01" />
+  </svg>
+</button>
+<button type="button" class="側邊欄標籤 調整點數標籤" id="調整點數側邊欄標籤" aria-controls="調整點數側邊欄" aria-expanded="false" aria-label="打開調整點數" title="打開調整點數">
+  <!-- 扳手 -->
+  <svg class="側邊欄標籤圖示" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+  </svg>
+</button>
+
+<dialog class="結果視窗" id="結果視窗">
+  <button type="button" class="結果關閉鈕" id="關閉結果鈕" aria-label="關閉">×</button>
+  <div id="結果內容" tabindex="-1"></div>
+</dialog>
+
+<dialog class="點數確認視窗" id="點數確認視窗">
+  <form method="dialog">
+    <p class="點數確認訊息" id="點數確認訊息"></p>
+    <div class="點數確認按鈕列">
+      <button type="submit" class="一般按鈕" value="取消">取消</button>
+      <button type="submit" class="一般按鈕 點數確認同意鈕" value="同意">確定</button>
+    </div>
+  </form>
+</dialog>
+
 
 <script src="scoring-engine.js"></script>
 <script src="interface.js"></script>

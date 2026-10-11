@@ -49,14 +49,24 @@ const 畫面狀態 = {
   和牌張: null,
   副露清單: [],
   場風牌: 27,
-  自風牌: 28,
+  // 和牌者的自風牌編號，一開始不預設，還沒選是 null
+  自風牌: null,
   連莊數: 0,
   是自摸: false,
   寶牌清單: [],
   加入目標: '手牌',
   副露種類: '吃',
-  和牌狀況: {}
+  和牌狀況: {},
+  // 榮和時的放銃者風牌編號，還沒選是 null
+  放銃者風牌: null,
+  // 東南西北各是誰，依位置模式的局況與四家名稱換算，打開計算側邊欄時更新；沒填名稱是空字串
+  各風人名: ['', '', '', ''],
+  // 東南西北各坐在位置模式的哪個座位（座位清單的序號），打開計算側邊欄時更新
+  各風座位序: [0, 1, 2, 3]
 };
+
+// 結果視窗的確認鈕用來把點數移動加到桌面點數，初始化時由位置模式提供
+let 套用點數到桌面 = null;
 和牌狀況定義清單.forEach((定義) => { 畫面狀態.和牌狀況[定義.代號] = false; });
 
 /* ------------------------------------------------------------------ */
@@ -508,6 +518,49 @@ function 渲染和牌張() {
 }
 
 /** 和牌方式用兩顆按鈕切換 */
+const 風名清單 = ['東', '南', '西', '北'];
+
+/** 某個風牌的顯示名稱：有填人名用人名，沒填用「東家」這類稱呼 */
+function 風位顯示名稱(風牌編號) {
+  const 風序 = 風牌編號 - 計算引擎.東風編號;
+  return 畫面狀態.各風人名[風序].trim() || `${風名清單[風序]}家`;
+}
+
+/** 填一個風位選單的選項：風（人名），沒填人名只顯示風 */
+function 填入風位選單(選單, 風牌清單, 選取值, 第一項文字) {
+  選單.textContent = '';
+  if (第一項文字) {
+    const 提示 = document.createElement('option');
+    提示.value = '';
+    提示.textContent = 第一項文字;
+    選單.appendChild(提示);
+  }
+  for (const 風牌 of 風牌清單) {
+    const 風序 = 風牌 - 計算引擎.東風編號;
+    const 人名 = 畫面狀態.各風人名[風序].trim();
+    const 選項 = document.createElement('option');
+    選項.value = String(風牌);
+    選項.textContent = 人名 ? `${風名清單[風序]}（${人名}）` : 風名清單[風序];
+    選單.appendChild(選項);
+  }
+  選單.value = 選取值 === null ? '' : String(選取值);
+}
+
+/** 和牌者選單與放銃者選單：和牌者一開始沒選；選榮和才顯示放銃者，選項排除和牌者；換和牌者後放銃者跟和牌者重複就清掉 */
+function 渲染風位選單() {
+  const 全部風牌 = [0, 1, 2, 3].map((風序) => 計算引擎.東風編號 + 風序);
+  填入風位選單(document.getElementById('自風選單'), 全部風牌, 畫面狀態.自風牌, '選擇和牌者');
+  if (畫面狀態.放銃者風牌 === 畫面狀態.自風牌) 畫面狀態.放銃者風牌 = null;
+  const 放銃者選單 = document.getElementById('放銃者選單');
+  放銃者選單.hidden = 畫面狀態.是自摸;
+  填入風位選單(
+    放銃者選單,
+    全部風牌.filter((風牌) => 風牌 !== 畫面狀態.自風牌),
+    畫面狀態.放銃者風牌,
+    '選擇放銃者',
+  );
+}
+
 function 渲染和牌方式鈕組() {
   const 容器 = document.getElementById('和牌方式鈕組');
   容器.textContent = '';
@@ -580,6 +633,8 @@ function 渲染和牌狀況() {
   容器.textContent = '';
   const 是門前 = 畫面狀態.副露清單.every((副露) => 副露.種類 === '暗槓');
   const 是莊家 = 畫面狀態.自風牌 === 計算引擎.東風編號;
+  // 還沒選和牌者時不知道是莊家還是子家，限定莊家或子家的項目都先停用
+  const 已選和牌者 = 畫面狀態.自風牌 !== null;
 
   for (const 定義 of 和牌狀況定義清單) {
     let 可用 = true;
@@ -587,7 +642,7 @@ function 渲染和牌狀況() {
     if (定義.僅限自摸 && !畫面狀態.是自摸) 可用 = false;
     if (定義.僅限榮和 && 畫面狀態.是自摸) 可用 = false;
     if (定義.需要莊家 && !是莊家) 可用 = false;
-    if (定義.需要子家 && 是莊家) 可用 = false;
+    if (定義.需要子家 && (是莊家 || !已選和牌者)) 可用 = false;
     if (定義.需要立直 && !(畫面狀態.和牌狀況.是立直 || 畫面狀態.和牌狀況.是雙立直)) 可用 = false;
     if (!可用) 畫面狀態.和牌狀況[定義.代號] = false;
 
@@ -655,6 +710,16 @@ function 渲染計算鈕() {
     計算鈕.textContent = `還要 ${還要張數} 張才能計算`;
     return;
   }
+  if (畫面狀態.自風牌 === null) {
+    計算鈕.disabled = true;
+    計算鈕.textContent = '還要選擇和牌者';
+    return;
+  }
+  if (!畫面狀態.是自摸 && 畫面狀態.放銃者風牌 === null) {
+    計算鈕.disabled = true;
+    計算鈕.textContent = '還要選擇放銃者';
+    return;
+  }
   計算鈕.disabled = false;
   計算鈕.textContent = '確定計算';
 }
@@ -717,6 +782,9 @@ function 渲染結果內容() {
     本體.appendChild(本場元素);
   }
 
+  const 點數變化 = 計算點數變化(結果);
+  本體.appendChild(建立點數移動清單(點數變化));
+
   const 役清單元素 = document.createElement('ul');
   役清單元素.className = '役清單';
   for (const 役滿 of 結果.役滿清單) {
@@ -743,16 +811,65 @@ function 渲染結果內容() {
     本體.appendChild(符明細元素);
   }
 
-  本體.appendChild(建立小標('牌型拆解'));
-  const 拆解元素 = document.createElement('ul');
-  拆解元素.className = '明細清單';
-  for (const 描述 of 結果.面子描述清單) {
-    拆解元素.appendChild(建立明細項目(描述, ''));
-  }
-  拆解元素.appendChild(建立明細項目('聽牌形', 結果.待牌形));
-  本體.appendChild(拆解元素);
+  本體.appendChild(建立套用點數鈕(點數變化));
 
   容器.appendChild(本體);
+}
+
+/** 和牌後每家的點數變化，第一筆是和牌者（正數），其餘是付錢的人（負數）：
+    榮和由放銃者一人付；自摸時莊家和牌三家各付同額，子家和牌莊家付較多 */
+function 計算點數變化(結果) {
+  const 點數 = 結果.點數結果;
+  const 和牌者 = 畫面狀態.自風牌;
+  const 東 = 計算引擎.東風編號;
+  let 支付清單;
+  if (!結果.是自摸) {
+    支付清單 = [{ 風牌: 畫面狀態.放銃者風牌, 點數: 點數.總點數 }];
+  } else {
+    支付清單 = [0, 1, 2, 3].map((風序) => 東 + 風序).filter((風牌) => 風牌 !== 和牌者).map((風牌) => ({
+      風牌,
+      點數: 結果.是莊家 ? 點數.明細.子家支付 : (風牌 === 東 ? 點數.明細.莊家支付 : 點數.明細.子家支付),
+    }));
+  }
+  return [{ 風牌: 和牌者, 變化: 點數.總點數 }, ...支付清單.map((支付) => ({ 風牌: 支付.風牌, 變化: -支付.點數 }))];
+}
+
+/** 點數移動：用人名列出和牌者加多少、每個付錢的人扣多少 */
+function 建立點數移動清單(點數變化) {
+  const 清單 = document.createElement('ul');
+  清單.className = '點數移動清單';
+  const 加入一列 = (風牌, 文字, 類別) => {
+    const 列 = document.createElement('li');
+    const 名稱 = document.createElement('span');
+    名稱.textContent = 風位顯示名稱(風牌);
+    const 數字 = document.createElement('span');
+    數字.className = 類別;
+    數字.textContent = 文字;
+    列.append(名稱, 數字);
+    清單.appendChild(列);
+  };
+  for (const { 風牌, 變化 } of 點數變化) {
+    加入一列(風牌, `${變化 > 0 ? '+' : '−'}${Math.abs(變化).toLocaleString('zh-TW')}`, 變化 > 0 ? '加點' : '扣點');
+  }
+  return 清單;
+}
+
+/** 結果視窗底部的確認鈕：按下後把點數移動換算成座位，加到位置模式的點數上，關掉結果視窗與計算側邊欄回到桌面 */
+function 建立套用點數鈕(點數變化) {
+  const 按鈕 = document.createElement('button');
+  按鈕.type = 'button';
+  按鈕.className = '計算鈕 套用點數鈕';
+  按鈕.textContent = '確認';
+  按鈕.setAttribute('aria-label', '確認，把點數移動加到桌面的點數');
+  按鈕.addEventListener('click', () => {
+    const 座位變化 = 座位清單.map(() => 0);
+    for (const { 風牌, 變化 } of 點數變化) {
+      座位變化[畫面狀態.各風座位序[風牌 - 計算引擎.東風編號]] += 變化;
+    }
+    套用點數到桌面(座位變化);
+    document.getElementById('結果視窗').close();
+  });
+  return 按鈕;
 }
 
 /** 不能和牌時的畫面：錯誤原因，加上已經倒牌就得付的詐和罰符 */
@@ -830,6 +947,7 @@ function 建立小標(文字) {
 /* ------------------------------------------------------------------ */
 
 function 重新渲染全部() {
+  渲染風位選單();
   渲染區塊選取狀態();
   渲染剩餘張數();
   渲染牌庫();
@@ -843,21 +961,12 @@ function 重新渲染全部() {
   渲染計算鈕();
 }
 
-function 全部重設() {
-  畫面狀態.場風牌 = 計算引擎.東風編號;
-  畫面狀態.自風牌 = 計算引擎.南風編號;
-  畫面狀態.是自摸 = false;
-  畫面狀態.連莊數 = 0;
-  document.getElementById('連莊數選單').value = '0';
-  document.getElementById('場風選單').value = String(計算引擎.東風編號);
-  document.getElementById('自風選單').value = String(計算引擎.南風編號);
+/** 清空鈕：只清掉放進手牌、和牌張、副露、寶牌的牌；場風、和牌者、放銃者、連莊數、和牌方式與和牌狀況都保留 */
+function 清空輸入的牌() {
   畫面狀態.手牌 = [];
   畫面狀態.和牌張 = null;
   畫面狀態.副露清單 = [];
   畫面狀態.寶牌清單 = [];
-  畫面狀態.加入目標 = '手牌';
-  畫面狀態.副露種類 = '吃';
-  和牌狀況定義清單.forEach((定義) => { 畫面狀態.和牌狀況[定義.代號] = false; });
 }
 
 /** 確定按鈕開啟結果視窗；點視窗外側或按 Esc 都會關閉 */
@@ -870,43 +979,13 @@ function 綁定結果視窗() {
   });
 }
 
-/** 標題旁的問號圈鈕開關規則說明視窗；點視窗外側或按 Esc 都會關閉 */
-function 綁定規則說明視窗() {
-  const 視窗 = document.getElementById('規則說明視窗');
-  document.getElementById('開啟規則說明鈕').addEventListener('click', () => {
-    視窗.showModal();
-    // 預設焦點會停在關閉鈕上，在深色標頭留下一圈白框，改成把焦點放在內容區
-    document.getElementById('規則說明內容').focus();
-  });
-  document.getElementById('關閉規則說明鈕').addEventListener('click', () => 視窗.close());
-  視窗.addEventListener('click', (事件) => {
-    // 點到視窗本身（也就是遮罩範圍）才關閉，點內容不關
-    if (事件.target === 視窗) 視窗.close();
-  });
-}
-
-const 目前模式儲存鍵 = '日麻計算.目前模式';
-
-/** 讀出上次所在的模式；私密瀏覽或封鎖網站資料時讀不到，一律回到計算模式 */
-function 讀取上次模式() {
-  try {
-    return localStorage.getItem(目前模式儲存鍵) === '位置' ? '位置' : '計算';
-  } catch {
-    return '計算';
-  }
-}
-
-function 記住目前模式(模式) {
-  try {
-    localStorage.setItem(目前模式儲存鍵, 模式);
-  } catch {
-    // 存不了就只影響重整後回到哪個模式，不影響操作
-  }
-}
-
-/** 標題旁的模式切換鈕：在計算與位置兩個畫面之間切換，按鈕文字顯示要切過去的模式；重整後回到上次所在的模式 */
-/** 位置模式的場風與連莊數帶到計算模式的場風、連莊數選單；連莊數選單最多十本場，超過時以十計 */
+/** 位置模式的場風與連莊數帶到計算模式的場風、連莊數選單；連莊數選單最多十本場，超過時以十計。
+    同時依目前莊家位置換算東南西北各是哪個座位，帶入那個座位的名稱 */
 function 帶入位置模式局況(局況) {
+  const 莊家座位序 = 局況.局序 % 4;
+  const 四家名稱 = 讀取上次名稱();
+  畫面狀態.各風座位序 = [0, 1, 2, 3].map((風序) => (莊家座位序 + 風序) % 4);
+  畫面狀態.各風人名 = 畫面狀態.各風座位序.map((座位序) => 四家名稱[座位序]);
   const 場風索引 = Math.floor(局況.局序 / 4);
   const 連莊數選單 = document.getElementById('連莊數選單');
   const 連莊數上限 = Number(連莊數選單.options[連莊數選單.options.length - 1].value);
@@ -917,34 +996,70 @@ function 帶入位置模式局況(局況) {
   重新渲染全部();
 }
 
-/** 從位置模式切到計算模式時，取得目前局況並帶入計算 */
-function 綁定模式切換(取得目前局況) {
-  const 切換鈕 = document.getElementById('模式切換鈕');
-  const 計算模式畫面 = document.getElementById('計算模式畫面');
-  const 位置模式畫面 = document.getElementById('位置模式畫面');
-  const 全部重設鈕 = document.getElementById('全部重設鈕');
-  const 整體容器 = document.getElementById('整體容器');
-  const 局數重置鈕 = document.getElementById('局數重置鈕');
+/** 左邊的四個側邊欄（設定起始值、計算、規則說明、調整點數）：各自用左緣的標籤打開或收合，同時只開一個，打開時其他標籤先隱藏；
+    打開計算時把位置模式的局況帶入計算。點遮罩、再按一次標籤或按 Esc（沒有其他視窗開著時）都會收合。
+    回傳收合全部的函式 */
+function 綁定側邊欄(取得目前局況) {
+  const 遮罩 = document.getElementById('側邊欄遮罩');
+  const 側邊欄清單 = [
+    {
+      側邊欄: document.getElementById('計算側邊欄'),
+      標籤: document.getElementById('計算側邊欄標籤'),
+      名稱: '計算',
+      打開時: () => 帶入位置模式局況(取得目前局況()),
+    },
+    {
+      側邊欄: document.getElementById('起始值側邊欄'),
+      標籤: document.getElementById('起始值側邊欄標籤'),
+      名稱: '設定起始值',
+    },
+    {
+      側邊欄: document.getElementById('規則說明側邊欄'),
+      標籤: document.getElementById('規則說明側邊欄標籤'),
+      名稱: '採用的規則細節',
+    },
+    {
+      側邊欄: document.getElementById('調整點數側邊欄'),
+      標籤: document.getElementById('調整點數側邊欄標籤'),
+      名稱: '調整點數',
+      // 每次打開都從桌面目前的點數重新開始調整
+      打開時: () => document.dispatchEvent(new CustomEvent('打開調整點數')),
+    },
+  ];
+  let 目前打開 = null;
 
-  function 顯示模式(模式) {
-    const 是位置模式 = 模式 === '位置';
-    位置模式畫面.hidden = !是位置模式;
-    計算模式畫面.hidden = 是位置模式;
-    // 全部重設只作用在計算畫面，位置畫面下隱藏避免誤清
-    全部重設鈕.hidden = 是位置模式;
-    局數重置鈕.hidden = !是位置模式;
-    整體容器.classList.toggle('位置模式中', 是位置模式);
-    切換鈕.textContent = 是位置模式 ? '切換到計算' : '切換到位置';
+  /** 傳入要打開的側邊欄；傳 null 收合全部 */
+  function 切換到(要打開的) {
+    目前打開 = 要打開的;
+    要打開的?.打開時?.();
+    側邊欄清單.forEach((項目) => {
+      const 是這個 = 項目 === 要打開的;
+      項目.側邊欄.classList.toggle('打開', 是這個);
+      // 收合時側邊欄裡的按鈕不能被 Tab 走到，也不讓螢幕閱讀器讀到
+      項目.側邊欄.inert = !是這個;
+      項目.標籤.hidden = 要打開的 !== null && !是這個;
+      項目.標籤.setAttribute('aria-expanded', String(是這個));
+      const 標籤說明 = `${是這個 ? '收合' : '打開'}${項目.名稱}`;
+      項目.標籤.setAttribute('aria-label', 標籤說明);
+      項目.標籤.title = 標籤說明;
+    });
+    遮罩.hidden = 要打開的 === null;
   }
 
-  切換鈕.addEventListener('click', () => {
-    const 新模式 = 位置模式畫面.hidden ? '位置' : '計算';
-    if (新模式 === '計算') 帶入位置模式局況(取得目前局況());
-    顯示模式(新模式);
-    記住目前模式(新模式);
+  側邊欄清單.forEach((項目) => {
+    項目.標籤.addEventListener('click', () => 切換到(目前打開 === 項目 ? null : 項目));
+  });
+  遮罩.addEventListener('click', () => 切換到(null));
+  document.addEventListener('keydown', (事件) => {
+    if (事件.key !== 'Escape' || 目前打開 === null) return;
+    // 結果、點數確認視窗開著時，Esc 只關視窗
+    if (document.querySelector('dialog[open]')) return;
+    const 標籤 = 目前打開.標籤;
+    切換到(null);
+    標籤.focus();
   });
 
-  顯示模式(讀取上次模式());
+  return () => 切換到(null);
 }
 
 /* ---------- 位置模式：場風、局數與換莊 ---------- */
@@ -1126,6 +1241,260 @@ function 綁定換莊() {
   return () => 局況;
 }
 
+/* ---------- 位置模式：四家點數 ---------- */
+const 四家點數儲存鍵 = '日麻計算.四家點數';
+const 四家名稱儲存鍵 = '日麻計算.四家名稱';
+const 起始點數儲存鍵 = '日麻計算.起始點數';
+const 預設起始點數 = 25000;
+// 起始點數加減一次的量
+const 起始點數級距 = 1000;
+
+const 是合法起始點數 = (值) => Number.isInteger(值) && 值 >= 0 && 值 % 起始點數級距 === 0;
+
+/** 讀出上次設定的起始點數；讀不到或內容不合法時用預設起始點數 */
+function 讀取上次起始點數() {
+  try {
+    const 值 = JSON.parse(localStorage.getItem(起始點數儲存鍵));
+    if (是合法起始點數(值)) return 值;
+  } catch {
+    // 讀不到就用預設起始點數
+  }
+  return 預設起始點數;
+}
+
+function 記住起始點數(起始點數) {
+  try {
+    localStorage.setItem(起始點數儲存鍵, JSON.stringify(起始點數));
+  } catch {
+    // 存不了只影響重整後的起始點數
+  }
+}
+
+/** 讀出上次四家的點數，依座位清單的順序（下、右、上、左）；讀不到或內容不合法時四家都是起始點數 */
+function 讀取上次點數(起始點數) {
+  try {
+    const 值 = JSON.parse(localStorage.getItem(四家點數儲存鍵));
+    if (Array.isArray(值) && 值.length === 座位清單.length && 值.every(Number.isInteger)) return 值;
+  } catch {
+    // 讀不到就用起始點數
+  }
+  return 座位清單.map(() => 起始點數);
+}
+
+function 記住點數(四家點數) {
+  try {
+    localStorage.setItem(四家點數儲存鍵, JSON.stringify(四家點數));
+  } catch {
+    // 存不了只影響重整後的點數
+  }
+}
+
+/** 讀出上次四家的名稱，依座位清單的順序；讀不到或內容不合法時四家都沒有名稱 */
+function 讀取上次名稱() {
+  try {
+    const 值 = JSON.parse(localStorage.getItem(四家名稱儲存鍵));
+    if (Array.isArray(值) && 值.length === 座位清單.length && 值.every((名稱) => typeof 名稱 === 'string')) return 值;
+  } catch {
+    // 讀不到就沒有名稱
+  }
+  return 座位清單.map(() => '');
+}
+
+function 記住名稱(四家名稱) {
+  try {
+    localStorage.setItem(四家名稱儲存鍵, JSON.stringify(四家名稱));
+  } catch {
+    // 存不了只影響重整後的名稱
+  }
+}
+
+/** 桌面上的四家點數只顯示、不能直接修改，跟著座位（人），換莊時不動；右上的重置鈕讓四家回到起始點數，
+    計算結果按確認後依座位加減。
+    設定起始值側邊欄：加減一次 1000、不低於 0，按確認跳出確認視窗，按確定才把四家點數都改成起始點數；
+    四家名稱邊打邊顯示在點數上方，前後空白不算，清空就不顯示 */
+function 綁定點數(收合側邊欄) {
+  let 起始點數 = 讀取上次起始點數();
+  let 四家點數 = 讀取上次點數(起始點數);
+  let 四家名稱 = 讀取上次名稱();
+  const 點數位清單 = 座位清單.map((座位) => document.querySelector(`.點數位[data-座位="${座位}"]`));
+
+  const 渲染點數 = () => {
+    點數位清單.forEach((點數位, 座位序) => {
+      const 點數數字 = 點數位.querySelector('.點數數字');
+      點數數字.textContent = String(四家點數[座位序]);
+      點數數字.classList.toggle('負數', 四家點數[座位序] < 0);
+      const 名稱 = 四家名稱[座位序].trim();
+      const 玩家名稱 = 點數位.querySelector('.玩家名稱');
+      玩家名稱.textContent = 名稱;
+      玩家名稱.style.setProperty('--名稱字數', String(Array.from(名稱).length));
+      玩家名稱.hidden = 名稱 === '';
+    });
+  };
+  // 計算結果確認後的增減量顯示這麼久，之後才把數字加到點數上
+  const 增減顯示毫秒數 = 2000;
+  const 點數增減清單 = 點數位清單.map((點數位) => 點數位.querySelector('.點數增減'));
+  let 增減顯示計時 = null;
+  const 收起增減 = () => {
+    clearTimeout(增減顯示計時);
+    增減顯示計時 = null;
+    點數增減清單.forEach((元素) => { 元素.hidden = true; });
+  };
+  const 更新點數 = (新點數) => {
+    // 增減量還在顯示時有其他更新（例如重置），直接收起，以新的點數為準
+    收起增減();
+    四家點數 = 新點數;
+    記住點數(四家點數);
+    渲染點數();
+  };
+  渲染點數();
+
+  document.getElementById('局數重置鈕').addEventListener('click', () => {
+    更新點數(座位清單.map(() => 起始點數));
+  });
+
+  // 計算結果的確認鈕：依座位清單順序傳入每家的點數變化，收合側邊欄回到桌面；
+  // 有增減的那幾家在點數下方用紅字顯示增減量兩秒，之後才把數字加到點數上。
+  // 新點數立刻存起來，兩秒內重整也不會漏加
+  套用點數到桌面 = (座位變化) => {
+    收起增減();
+    渲染點數();
+    四家點數 = 四家點數.map((點數, 座位序) => 點數 + 座位變化[座位序]);
+    記住點數(四家點數);
+    座位變化.forEach((變化, 座位序) => {
+      const 元素 = 點數增減清單[座位序];
+      元素.textContent = 變化 > 0 ? `+${變化}` : `−${-變化}`;
+      元素.hidden = 變化 === 0;
+    });
+    收合側邊欄();
+    增減顯示計時 = setTimeout(() => {
+      收起增減();
+      渲染點數();
+    }, 增減顯示毫秒數);
+  };
+
+  document.querySelectorAll('.名稱輸入框').forEach((輸入框) => {
+    const 座位序 = 座位清單.indexOf(輸入框.dataset.座位);
+    輸入框.value = 四家名稱[座位序];
+    輸入框.addEventListener('input', () => {
+      四家名稱 = 四家名稱.map((名稱, 序) => (序 === 座位序 ? 輸入框.value : 名稱));
+      記住名稱(四家名稱);
+      渲染點數();
+    });
+  });
+
+  const 起始點數數字 = document.getElementById('起始點數數字');
+  const 起始點數減少鈕 = document.getElementById('起始點數減少鈕');
+  const 渲染起始點數 = () => {
+    起始點數數字.textContent = String(起始點數);
+    起始點數減少鈕.disabled = 起始點數 === 0;
+  };
+  const 調整起始點數 = (變化量) => {
+    起始點數 = Math.max(0, 起始點數 + 變化量);
+    記住起始點數(起始點數);
+    渲染起始點數();
+  };
+  渲染起始點數();
+  起始點數減少鈕.addEventListener('click', () => 調整起始點數(-起始點數級距));
+  document.getElementById('起始點數增加鈕').addEventListener('click', () => 調整起始點數(起始點數級距));
+
+  // 設定起始值與調整點數共用一個確認視窗，打開前先放好按確定後要做的事
+  const 確認視窗 = document.getElementById('點數確認視窗');
+  let 確定後動作 = null;
+  const 跳出確認 = (訊息, 動作) => {
+    document.getElementById('點數確認訊息').textContent = 訊息;
+    確定後動作 = 動作;
+    確認視窗.showModal();
+  };
+  document.getElementById('起始點數確認鈕').addEventListener('click', () => {
+    跳出確認(`要把四家點數都改成 ${起始點數} 嗎？`, () => 更新點數(座位清單.map(() => 起始點數)));
+  });
+  // 按確定、取消都會送出表單並關閉確認視窗，Esc 直接關閉不送出；
+  // 按確定才執行，並收合側邊欄回到桌面，取消則留在側邊欄
+  確認視窗.querySelector('form').addEventListener('submit', (事件) => {
+    if (事件.submitter?.value !== '同意' || 確定後動作 === null) return;
+    確定後動作();
+    確定後動作 = null;
+    收合側邊欄();
+  });
+
+  // 調整點數側邊欄：打開時以桌面目前的點數為底，按加減鈕只改這裡的暫存，按確認並確定後才寫回桌面
+  const 起始稱呼清單 = ['起始東', '起始南', '起始西', '起始北'];
+  const 加減量清單 = [-1000, -100, 100, 1000];
+  const 調整點數確認鈕 = document.getElementById('調整點數確認鈕');
+  let 調整中點數 = 四家點數.slice();
+  const 調整列清單 = 座位清單.map((座位, 座位序) => {
+    const 列 = document.createElement('div');
+    列.className = '調整點數列';
+    const 標頭 = document.createElement('div');
+    標頭.className = '調整點數標頭';
+    const 名稱 = document.createElement('span');
+    名稱.className = '調整點數名稱';
+    const 算式 = document.createElement('span');
+    算式.className = '調整點數算式';
+    算式.setAttribute('aria-live', 'polite');
+    const 數字 = document.createElement('span');
+    數字.className = '調整點數數字';
+    標頭.append(名稱, 算式, 數字);
+    const 按鈕列 = document.createElement('div');
+    按鈕列.className = '調整點數按鈕列';
+    for (const 加減量 of 加減量清單) {
+      const 按鈕 = document.createElement('button');
+      按鈕.type = 'button';
+      按鈕.className = '一般按鈕';
+      按鈕.textContent = 加減量 > 0 ? `+${加減量}` : `−${-加減量}`;
+      按鈕.setAttribute('aria-label', `${起始稱呼清單[座位序]}${加減量 > 0 ? '加' : '減'} ${Math.abs(加減量)}`);
+      按鈕.addEventListener('click', () => {
+        調整中點數 = 調整中點數.map((點數, 序) => (序 === 座位序 ? 點數 + 加減量 : 點數));
+        渲染調整點數();
+      });
+      按鈕列.appendChild(按鈕);
+    }
+    列.append(標頭, 按鈕列);
+    return { 列, 名稱, 算式, 數字 };
+  });
+  document.getElementById('調整點數清單').append(...調整列清單.map((項目) => 項目.列));
+
+  const 帶正負號 = (數值) => (數值 > 0 ? `+${數值}` : 數值 < 0 ? `−${-數值}` : '±0');
+  const 調整點數總差 = document.getElementById('調整點數總差');
+
+  /** 卡片只顯示名稱，沒填就空白；改過的那家在目前點數前面加上「原本±差額=」，等號右邊就是目前點數；
+      標題旁顯示調整後四家總分與開局總分（起始點數乘四）的差距；沒有任何變動時確認鈕停用 */
+  function 渲染調整點數() {
+    調整列清單.forEach((項目, 座位序) => {
+      項目.名稱.textContent = 四家名稱[座位序].trim();
+      項目.數字.textContent = String(調整中點數[座位序]);
+      項目.數字.classList.toggle('負數', 調整中點數[座位序] < 0);
+      const 差額 = 調整中點數[座位序] - 四家點數[座位序];
+      項目.算式.textContent = 差額 === 0
+        ? ''
+        : `${四家點數[座位序]}${差額 > 0 ? '+' : '−'}${Math.abs(差額)}=`;
+    });
+    const 開局總分 = 起始點數 * 座位清單.length;
+    const 總差 = 調整中點數.reduce((合計, 點數) => 合計 + 點數, 0) - 開局總分;
+    調整點數總差.textContent = 帶正負號(總差);
+    調整點數總差.classList.toggle('有差距', 總差 !== 0);
+    調整點數總差.title = `調整後四家總分與開局總分 ${開局總分} 的差距`;
+    調整點數總差.setAttribute('aria-label', `與開局總分 ${開局總分} 相差 ${帶正負號(總差)}`);
+    調整點數確認鈕.disabled = 調整中點數.every((點數, 座位序) => 點數 === 四家點數[座位序]);
+  }
+  document.addEventListener('打開調整點數', () => {
+    調整中點數 = 四家點數.slice();
+    渲染調整點數();
+  });
+  渲染調整點數();
+
+  調整點數確認鈕.addEventListener('click', () => {
+    const 變動說明 = 調整中點數
+      .map((點數, 座位序) => (點數 === 四家點數[座位序]
+        ? null
+        : `${四家名稱[座位序].trim() || 起始稱呼清單[座位序]}：${四家點數[座位序]} → ${點數}`))
+      .filter((說明) => 說明 !== null);
+    const 新點數 = 調整中點數.slice();
+    跳出確認(`要這樣調整點數嗎？\n${變動說明.join('\n')}`, () => 更新點數(新點數));
+  });
+}
+
+
 /* ---------- 位置模式：擲骰 ---------- */
 // 骰子各點數的點落在三乘三格子的哪幾格（由左上往右下編號 0 到 8）
 const 骰子點位置表 = {
@@ -1242,7 +1611,13 @@ function 初始化畫面() {
 
   const 自風選單 = document.getElementById('自風選單');
   自風選單.addEventListener('change', () => {
-    畫面狀態.自風牌 = Number(自風選單.value);
+    畫面狀態.自風牌 = 自風選單.value === '' ? null : Number(自風選單.value);
+    重新渲染全部();
+  });
+
+  const 放銃者選單 = document.getElementById('放銃者選單');
+  放銃者選單.addEventListener('change', () => {
+    畫面狀態.放銃者風牌 = 放銃者選單.value === '' ? null : Number(放銃者選單.value);
     重新渲染全部();
   });
 
@@ -1252,18 +1627,18 @@ function 初始化畫面() {
     重新渲染全部();
   });
 
-  document.getElementById('全部重設鈕').addEventListener('click', () => {
-    全部重設();
+  document.getElementById('清空鈕').addEventListener('click', () => {
+    清空輸入的牌();
     重新渲染全部();
   });
 
   綁定區塊選取();
-  綁定規則說明視窗();
   綁定結果視窗();
-  // 模式切換要讀位置模式的局況，所以先綁定換莊
+  // 計算側邊欄打開時要讀位置模式的局況，所以先綁定換莊
   const 取得目前局況 = 綁定換莊();
-  綁定模式切換(取得目前局況);
+  const 收合側邊欄 = 綁定側邊欄(取得目前局況);
   綁定擲骰(取得目前局況);
+  綁定點數(收合側邊欄);
 
   重新渲染全部();
 }

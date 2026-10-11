@@ -53,14 +53,103 @@ button,
   -webkit-user-select: none;
 }
 
-.整體容器 {
-  /* 位置模式的切換鈕要對齊同一個左上角，內距抽成變數共用 */
+/* 位置模式主畫面與側邊欄共用的內距 */
+.整體容器,
+.側邊欄內容 {
   --容器上內距: 12px;
   --容器側內距: 14px;
-  position: relative;
+}
+
+/* ---------- 左邊的側邊欄：設定起始值、計算、規則說明 ---------- */
+/* 收在畫面左邊，打開時從左滑出蓋住位置模式。計算寬螢幕佔九成，右側留一條看得到位置模式，手機全寬；
+   設定起始值內容少，固定窄寬；規則說明是一段文字，寬度以好讀為準 */
+:root {
+  --計算側邊欄寬度: 90vw;
+  --起始值側邊欄寬度: min(300px, 100vw);
+  --規則說明側邊欄寬度: min(480px, 100vw);
+  --調整點數側邊欄寬度: min(320px, 100vw);
+}
+.側邊欄 {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--底色);
+  box-shadow: 4px 0 24px rgba(35, 32, 27, .25);
+  transform: translateX(-100%);
+  visibility: hidden;
+  /* 收合時等滑出動畫結束才隱藏 */
+  transition: transform .25s ease, visibility 0s linear .25s;
+}
+.側邊欄.打開 {
+  transform: none;
+  visibility: visible;
+  transition: transform .25s ease;
+}
+.計算側邊欄 { width: var(--計算側邊欄寬度); }
+.起始值側邊欄 { width: var(--起始值側邊欄寬度); }
+.規則說明側邊欄 { width: var(--規則說明側邊欄寬度); }
+.調整點數側邊欄 { width: var(--調整點數側邊欄寬度); }
+.側邊欄內容 {
+  box-sizing: border-box;
   max-width: 1280px;
-  margin: 0 auto;
   padding: var(--容器上內距) var(--容器側內距) 20px;
+}
+.側邊欄遮罩 {
+  position: fixed;
+  inset: 0;
+  z-index: 19;
+  background: rgba(35, 32, 27, .35);
+}
+/* 開關標籤：收合時貼在畫面左緣的垂直中央，由上到下是齒輪、計算機、問號；打開時跟著側邊欄移到它的右緣，側邊欄全寬時停在畫面右緣內側 */
+.側邊欄標籤 {
+  --標籤寬度: 38px;
+  --標籤高度: 50px;
+  position: fixed;
+  top: 50%;
+  left: 0;
+  z-index: 21;
+  display: flex;
+  box-sizing: border-box;
+  width: var(--標籤寬度);
+  height: var(--標籤高度);
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  border: 1px solid var(--框線色);
+  border-left: none;
+  border-radius: 0 var(--圓角) var(--圓角) 0;
+  background: var(--卡片底色);
+  color: var(--主色);
+  box-shadow: 2px 2px 8px rgba(35, 32, 27, .15);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: left .25s ease;
+}
+.側邊欄標籤:hover { background: #efece2; }
+.起始值標籤 { top: calc(50% - var(--標籤高度) - 8px); }
+.規則說明標籤 { top: calc(50% + var(--標籤高度) + 8px); }
+.調整點數標籤 { top: calc(50% + (var(--標籤高度) + 8px) * 2); }
+.計算標籤[aria-expanded="true"] { left: min(var(--計算側邊欄寬度), 100vw - var(--標籤寬度)); }
+.起始值標籤[aria-expanded="true"] { left: min(var(--起始值側邊欄寬度), 100vw - var(--標籤寬度)); }
+.規則說明標籤[aria-expanded="true"] { left: min(var(--規則說明側邊欄寬度), 100vw - var(--標籤寬度)); }
+.調整點數標籤[aria-expanded="true"] { left: min(var(--調整點數側邊欄寬度), 100vw - var(--標籤寬度)); }
+.側邊欄標籤圖示 {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+@media (prefers-reduced-motion: reduce) {
+  .側邊欄,
+  .側邊欄.打開,
+  .側邊欄標籤 { transition: none; }
 }
 
 /* ---------- 標題 ---------- */
@@ -427,6 +516,7 @@ select {
   transition: background .12s ease;
 }
 .計算鈕:hover { background: var(--主色淺); }
+.套用點數鈕 { margin-top: 16px; }
 .計算鈕:disabled {
   background: #ddd8cc;
   color: #8d8676;
@@ -499,6 +589,17 @@ select {
   margin: 0 0 4px;
 }
 .收支說明 { font-size: 13px; color: var(--次要文字色); margin: 0 0 4px; }
+/* 點數移動：每家一列，扣點紅色、加點綠色 */
+.點數移動清單 { list-style: none; margin: 8px 0 14px; padding: 0; }
+.點數移動清單 li {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px dotted var(--框線色);
+  font-size: 14px;
+}
+.點數移動清單 .扣點 { color: var(--強調色); font-weight: 700; font-variant-numeric: tabular-nums; }
+.點數移動清單 .加點 { color: var(--主色); font-weight: 700; font-variant-numeric: tabular-nums; }
 .本場說明 {
   font-size: 12.5px;
   color: var(--次要文字色);
@@ -548,71 +649,11 @@ select {
 .罰符收支 { margin: 0 0 10px; font-size: 13px; color: #8a5a52; }
 .罰符附註 { margin: 0; font-size: 12px; color: #9a7a73; line-height: 1.6; }
 
-/* ---------- 規則說明：標題旁的問號圈鈕與彈出視窗 ---------- */
-.說明圈鈕 {
-  flex: none;
-  width: 23px;
-  height: 23px;
-  padding: 0;
-  border: 1.5px solid var(--主色);
-  border-radius: 50%;
-  background: transparent;
-  color: var(--主色);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: background .12s ease, color .12s ease;
-}
-.說明圈鈕:hover { background: var(--主色); color: #fff; }
-.說明圈鈕:focus-visible { outline: 2px solid var(--強調色); outline-offset: 2px; }
-
-.規則說明視窗 {
-  width: calc(100% - 32px);
-  max-width: 520px;
-  padding: 0;
-  border: 1px solid var(--框線色);
-  border-radius: var(--圓角);
-  background: var(--卡片底色);
-  color: var(--文字色);
-  box-shadow: 0 10px 36px rgba(35, 32, 27, .3);
-}
-.規則說明視窗::backdrop { background: rgba(35, 32, 27, .45); }
-.視窗標頭 {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  background: var(--主色);
-  color: #fff;
-  padding: 11px 14px 11px 18px;
-  border-radius: calc(var(--圓角) - 1px) calc(var(--圓角) - 1px) 0 0;
-}
-.視窗標頭 h2 { margin: 0; font-size: 16px; letter-spacing: .06em; }
-.視窗關閉鈕 {
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: #fff;
-  font-family: inherit;
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-}
-.視窗關閉鈕:hover { background: rgba(255, 255, 255, .18); }
-.視窗關閉鈕:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
-.視窗內容:focus { outline: none; }
-.視窗內容 { padding: 14px 18px 18px; font-size: 13.5px; }
-.視窗內容 > p { margin: 0 0 8px; }
-.視窗內容 ul { margin: 0 0 12px; padding-left: 20px; color: var(--次要文字色); }
-.視窗內容 li { margin-bottom: 5px; }
+/* ---------- 規則說明側邊欄 ---------- */
+.規則說明內容 { font-size: 13.5px; line-height: 1.7; }
+.規則說明內容 > p { margin: 0 0 8px; }
+.規則說明內容 ul { margin: 0 0 12px; padding-left: 20px; color: var(--次要文字色); }
+.規則說明內容 li { margin-bottom: 5px; }
 .視窗附註 {
   margin: 0;
   padding-top: 10px;
@@ -639,36 +680,28 @@ select {
   cursor: pointer;
 }
 .一般按鈕:hover { background: #efece2; }
-.模式切換鈕,
 .局數重置鈕 { flex: none; font-size: 13px; font-weight: 400; letter-spacing: 0; color: var(--文字色); }
 .頁首按鈕 { margin-left: auto; flex: none; font-size: 13px; font-weight: 400; letter-spacing: 0; }
 
 /* ---------- 位置模式 ---------- */
-/* 整頁剛好一個視窗高，標題以外的空間全部給正方形桌面，不產生捲軸 */
-.整體容器.位置模式中 {
+/* 位置模式是主畫面：整頁剛好一個視窗高，空間全部給正方形桌面，不產生捲軸 */
+.整體容器 {
+  position: relative;
   height: 100vh;
   height: 100dvh;
+  box-sizing: border-box;
+  padding: var(--容器上內距) var(--容器側內距) 20px;
   display: flex;
   flex-direction: column;
 }
-/* 位置模式不顯示標題，切換鈕停在與計算模式相同的左上角、重置鈕在右上角，標題原本的高度也讓給桌面 */
-.整體容器.位置模式中 .頁首 {
-  flex: none;
-  height: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-.整體容器.位置模式中 .標題文字,
-.整體容器.位置模式中 .說明圈鈕 { display: none; }
-.整體容器.位置模式中 .模式切換鈕,
-.整體容器.位置模式中 .局數重置鈕 {
+/* 頁首不佔高度，重置鈕在右上角，蓋在桌面上 */
+.位置頁首 { flex: none; height: 0; }
+.局數重置鈕 {
   position: absolute;
   top: var(--容器上內距);
+  right: var(--容器側內距);
   z-index: 1;
 }
-.整體容器.位置模式中 .模式切換鈕 { left: var(--容器側內距); }
-.整體容器.位置模式中 .局數重置鈕 { right: var(--容器側內距); }
 .位置模式畫面 {
   flex: 1;
   min-height: 0;
@@ -678,6 +711,120 @@ select {
   /* 以剩餘空間當尺寸基準，讓桌面取寬高較小者 */
   container-type: size;
 }
+/* 設定起始值側邊欄：起始點數標題、加減列、確認由上到下排 */
+.起始點數內容 {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding: 4px 0;
+}
+.起始點數標題 { font-size: 13px; color: var(--次要文字色); text-align: center; }
+/* 調整點數側邊欄：每家一張卡片，上面是稱呼、名稱與點數，下面一排四顆加減鈕 */
+.調整點數清單 { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.調整點數列 {
+  padding: 10px 12px;
+  border: 1px solid var(--框線色);
+  border-radius: var(--圓角);
+  background: var(--卡片底色);
+}
+.調整點數標頭 { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.調整點數名稱 {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--主色);
+}
+.調整點數數字 { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--主色); }
+.調整點數數字.負數 { color: var(--強調色); }
+/* 改過的那家在目前點數前面接上算式「原本±差額=」，等號右邊就是目前點數 */
+.調整點數算式 {
+  flex: none;
+  font-size: 13px;
+  color: var(--次要文字色);
+  font-variant-numeric: tabular-nums;
+}
+/* 標題旁的總分差距：剛好等於開局總分時用一般色，有差距時用紅色 */
+.調整點數總差 {
+  margin-left: auto;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  color: var(--主色);
+}
+.調整點數總差.有差距 { color: var(--強調色); }
+.調整點數按鈕列 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.調整點數按鈕列 .一般按鈕 { padding: 6px 0; font-variant-numeric: tabular-nums; color: var(--主色); }
+.調整點數確認鈕 { width: 100%; }
+.調整點數確認鈕:disabled { cursor: default; opacity: .5; }
+
+/* 四家名稱：接在起始點數下方，每列左邊是起始自風、右邊是輸入框 */
+.四家名稱內容 {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--框線色);
+}
+.名稱輸入列 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--主色);
+  font-weight: 700;
+}
+.名稱輸入框 {
+  flex: 1;
+  min-width: 0;
+  /* 小於 16px 時 iOS 會在聚焦時放大畫面 */
+  font-size: 16px;
+  font-family: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--框線色);
+  border-radius: 6px;
+  background: var(--卡片底色);
+  color: var(--文字色);
+}
+.名稱輸入框:focus { outline: 2px solid var(--主色); outline-offset: -1px; }
+.起始點數調整列 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.起始點數數字 {
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--主色);
+}
+.起始點數加減鈕 {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--主色);
+}
+.起始點數確認鈕 { padding: 8px 14px; font-size: 15px; color: var(--主色); font-weight: 700; }
+
+.點數確認視窗 {
+  width: calc(100% - 32px);
+  max-width: 320px;
+  padding: 20px;
+  border: 1px solid var(--框線色);
+  border-radius: var(--圓角);
+  background: var(--卡片底色);
+  color: var(--文字色);
+  box-shadow: 0 10px 36px rgba(35, 32, 27, .3);
+}
+.點數確認視窗::backdrop { background: rgba(35, 32, 27, .45); }
+/* 調整點數的確認會列出每家的變動，一家一行 */
+.點數確認訊息 { margin: 0 0 16px; font-size: 15px; line-height: 1.6; white-space: pre-line; }
+.點數確認按鈕列 { display: flex; justify-content: flex-end; gap: 8px; }
+.點數確認同意鈕 { background: var(--主色); border-color: var(--主色); color: #fff; }
+.點數確認同意鈕:hover { background: var(--主色); opacity: .9; }
+
 /* 模擬桌面中央放風牌的區域 */
 .風位桌面 {
   /* 正方形與長方形共用的框線寬度，位置計算都會用到 */
@@ -695,7 +842,9 @@ select {
   src: url("fonts/yuji-boku-east-south-west-north.woff2") format("woff2");
   font-display: block;
 }
-/* 正方形四邊各一個長方形，長邊與正方形的邊重合並置中；長為邊長一半、寬為四分之一，四個角剛好相接不重疊。
+/* 正方形四邊各一個長方形，長邊與正方形的邊重合，寬為邊長四分之一。
+   每個長方形從原本置中的位置，往坐在那一邊的人的右手方向延伸到正方形的邊，長為邊長四分之三；
+   四個長方形逆時針依序首尾相接，圍成一圈不重疊。
    百分比以正方形框線內側為基準，正方形實際邊長多兩條框線，所以位置與尺寸要補回框線寬度 */
 .桌邊長方形 {
   position: absolute;
@@ -706,21 +855,17 @@ select {
 /* 自風是東的那一格（莊家）框線改紅 */
 .桌邊長方形.莊家 { border-color: var(--強調色); }
 .桌邊長方形.上邊,
-.桌邊長方形.下邊 {
-  left: calc(25% - var(--框線) / 2);
-  width: calc(50% + var(--框線));
-  height: calc(25% + var(--框線) / 2);
-}
+.桌邊長方形.下邊 { height: calc(25% + var(--框線) / 2); }
 .桌邊長方形.左邊,
-.桌邊長方形.右邊 {
-  top: calc(25% - var(--框線) / 2);
-  width: calc(25% + var(--框線) / 2);
-  height: calc(50% + var(--框線));
-}
-.桌邊長方形.上邊 { top: calc(-1 * var(--框線)); }
-.桌邊長方形.下邊 { bottom: calc(-1 * var(--框線)); }
-.桌邊長方形.左邊 { left: calc(-1 * var(--框線)); }
-.桌邊長方形.右邊 { right: calc(-1 * var(--框線)); }
+.桌邊長方形.右邊 { width: calc(25% + var(--框線) / 2); }
+/* 下邊的人右手往畫面右方，延伸到右緣 */
+.桌邊長方形.下邊 { bottom: calc(-1 * var(--框線)); left: calc(25% - var(--框線) / 2); right: calc(-1 * var(--框線)); }
+/* 右邊的人右手往畫面上方，延伸到上緣 */
+.桌邊長方形.右邊 { right: calc(-1 * var(--框線)); bottom: calc(25% - var(--框線) / 2); top: calc(-1 * var(--框線)); }
+/* 上邊的人右手往畫面左方，延伸到左緣 */
+.桌邊長方形.上邊 { top: calc(-1 * var(--框線)); right: calc(25% - var(--框線) / 2); left: calc(-1 * var(--框線)); }
+/* 左邊的人右手往畫面下方，延伸到下緣 */
+.桌邊長方形.左邊 { left: calc(-1 * var(--框線)); top: calc(25% - var(--框線) / 2); bottom: calc(-1 * var(--框線)); }
 
 .風位字 {
   font-family: "Yuji Boku", serif;
@@ -770,6 +915,71 @@ select {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+}
+
+/* 點數層與自風字層一樣和正方形外緣重合，但換莊時不轉。
+   每家的點數區就是長方形延伸出來的那一格（邊長四分之一的正方形，位在該座位右手邊的角落），
+   整格轉成朝向坐在那一邊的人，點數上下置中，左右從置中再往左偏一點 */
+.點數層 {
+  position: absolute;
+  inset: calc(-1 * var(--框線));
+  container-type: size;
+  pointer-events: none;
+}
+.點數位 {
+  position: absolute;
+  width: 25%;
+  height: 25%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* 右側留空讓點數往左偏，偏移量是這個值的一半 */
+  padding-right: 4cqw;
+  box-sizing: border-box;
+}
+.點數位.下方 { left: 75%; top: 75%; }
+.點數位.右方 { left: 75%; top: 0;   transform: rotate(-90deg); }
+.點數位.上方 { left: 0;   top: 0;   transform: rotate(180deg); }
+.點數位.左方 { left: 0;   top: 75%; transform: rotate(90deg); }
+/* 名稱疊在點數正上方，不佔高度，點數維持上下置中 */
+.點數框 { position: relative; display: inline-flex; }
+.玩家名稱 {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 24cqw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* 六個字以內用 3.6cqw；字數更多時縮小到剛好放進 24cqw 寬，字數由程式寫進 --名稱字數 */
+  font-size: min(3.6cqw, 24cqw / var(--名稱字數, 1));
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--次要文字色);
+}
+/* 桌面上的點數只顯示，不能點擊修改；改點數用設定起始值側邊欄或右上的重置 */
+.點數數字 {
+  padding: .1em .2em;
+  font-size: 5cqw;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--主色);
+}
+.點數數字.負數 { color: var(--強調色); }
+/* 計算結果確認後，增減量在點數正下方顯示兩秒，不佔高度，點數維持上下置中 */
+.點數增減 {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 3.6cqw;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--強調色);
 }
 
 /* 四個長方形圍出的中央空白，放紅色場風字，字的右上角是第幾局，右下角是換莊鈕；整塊轉向莊家，角度由程式設定 */
@@ -900,8 +1110,12 @@ select {
 
 /* 窄螢幕把牌縮小，讓一列放得下九張 */
 @media (max-width: 560px) {
-  .整體容器 { --容器上內距: 16px; --容器側內距: 10px; padding-bottom: 48px; }
-  .整體容器.位置模式中 { padding-bottom: 16px; }
+  .整體容器,
+  .側邊欄內容 { --容器上內距: 16px; --容器側內距: 10px; }
+  .整體容器 { padding-bottom: 16px; }
+  .側邊欄內容 { padding-bottom: 48px; }
+  /* 手機上側邊欄蓋滿整個畫面 */
+  :root { --計算側邊欄寬度: 100vw; }
   .區塊 { padding: 12px 10px; }
   .麻將牌 { width: 32px; height: 45px; }
   .麻將牌 .牌面數字 { font-size: 16px; }
@@ -915,7 +1129,6 @@ select {
   .手牌列 { gap: 3px; padding: 6px; }
   .勾選格 { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
   .頁首 h1 { font-size: 20px; }
-  .視窗內容 { padding: 12px 14px 16px; }
 }
 
 /* 平板橫擺：牌與間距再縮一號，讓整頁在一個畫面內放得下，不必捲動 */
