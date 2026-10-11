@@ -885,6 +885,223 @@ function 綁定規則說明視窗() {
   });
 }
 
+const 目前模式儲存鍵 = '日麻計算.目前模式';
+
+/** 讀出上次所在的模式；私密瀏覽或封鎖網站資料時讀不到，一律回到計算模式 */
+function 讀取上次模式() {
+  try {
+    return localStorage.getItem(目前模式儲存鍵) === '位置' ? '位置' : '計算';
+  } catch {
+    return '計算';
+  }
+}
+
+function 記住目前模式(模式) {
+  try {
+    localStorage.setItem(目前模式儲存鍵, 模式);
+  } catch {
+    // 存不了就只影響重整後回到哪個模式，不影響操作
+  }
+}
+
+/** 標題旁的模式切換鈕：在計算與位置兩個畫面之間切換，按鈕文字顯示要切過去的模式；重整後回到上次所在的模式 */
+function 綁定模式切換() {
+  const 切換鈕 = document.getElementById('模式切換鈕');
+  const 計算模式畫面 = document.getElementById('計算模式畫面');
+  const 位置模式畫面 = document.getElementById('位置模式畫面');
+  const 全部重設鈕 = document.getElementById('全部重設鈕');
+  const 整體容器 = document.getElementById('整體容器');
+  const 局數重置鈕 = document.getElementById('局數重置鈕');
+
+  function 顯示模式(模式) {
+    const 是位置模式 = 模式 === '位置';
+    位置模式畫面.hidden = !是位置模式;
+    計算模式畫面.hidden = 是位置模式;
+    // 全部重設只作用在計算畫面，位置畫面下隱藏避免誤清
+    全部重設鈕.hidden = 是位置模式;
+    局數重置鈕.hidden = !是位置模式;
+    整體容器.classList.toggle('位置模式中', 是位置模式);
+    切換鈕.textContent = 是位置模式 ? '切換到計算' : '切換到位置';
+  }
+
+  切換鈕.addEventListener('click', () => {
+    const 新模式 = 位置模式畫面.hidden ? '位置' : '計算';
+    顯示模式(新模式);
+    記住目前模式(新模式);
+  });
+
+  顯示模式(讀取上次模式());
+}
+
+/* ---------- 位置模式：場風、局數與換莊 ---------- */
+const 風位字清單 = ['東', '南', '西', '北'];
+// 逆時針順序，與出牌順序一致
+const 座位清單 = ['下', '右', '上', '左'];
+const 桌面局況儲存鍵 = '日麻計算.桌面局況';
+// 東一局到北四局共十六局，北四局之後回到東一局
+const 總局數 = 16;
+
+/** 東一局、莊家沒有連莊 */
+function 建立初始局況() {
+  return { 局序: 0, 連莊數: 0, 換莊前連莊數紀錄: [] };
+}
+
+const 是非負整數 = (值) => Number.isInteger(值) && 值 >= 0;
+
+/** 讀出上次的局況：局序（0 是東一局、15 是北四局）、目前連莊數、每次換莊前的連莊數（倒退時還原用）；
+    讀不到或內容不合法時回到東一局 */
+function 讀取上次局況() {
+  try {
+    const 值 = JSON.parse(localStorage.getItem(桌面局況儲存鍵));
+    if (是非負整數(值?.局序) && 值.局序 < 總局數 && 是非負整數(值.連莊數)
+        && Array.isArray(值.換莊前連莊數紀錄) && 值.換莊前連莊數紀錄.every(是非負整數)) {
+      return 值;
+    }
+  } catch {
+    // 讀不到就用初始局況
+  }
+  return 建立初始局況();
+}
+
+function 記住局況(局況) {
+  try {
+    localStorage.setItem(桌面局況儲存鍵, JSON.stringify(局況));
+  } catch {
+    // 存不了只影響重整後回到哪一局
+  }
+}
+
+/** 莊家坐在某個座位時，中央區要逆時針轉的角度（下方 0 度、右邊 -90 度，依此類推） */
+function 中央區朝向莊家角度(莊家座位序) {
+  return 莊家座位序 * -90;
+}
+
+/** 依局況畫出場風字、局數紅點、四邊自風字、莊家紅框與連莊數，中央區轉向莊家；莊家座位從下方開始，每換一次莊逆時針移一格 */
+function 渲染桌面局況(局況) {
+  const 莊家座位序 = 局況.局序 % 4;
+  document.getElementById('場風字').textContent = 風位字清單[Math.floor(局況.局序 / 4)];
+  const 局數點點 = document.getElementById('局數點點');
+  局數點點.replaceChildren(...Array.from({ length: 莊家座位序 + 1 }, () => {
+    const 點 = document.createElement('span');
+    點.className = '局數點';
+    return 點;
+  }));
+  局數點點.setAttribute('aria-label', `第${莊家座位序 + 1}局`);
+  document.getElementById('桌面中央').style.transform = `rotate(${中央區朝向莊家角度(莊家座位序)}deg)`;
+  座位清單.forEach((座位, 座位序) => {
+    const 自風字 = 風位字清單[(座位序 - 莊家座位序 + 4) % 4];
+    document.querySelector(`.自風位[data-座位="${座位}"] .自風字`).textContent = 自風字;
+    document.querySelector(`.桌邊長方形[data-座位="${座位}"]`).classList.toggle('莊家', 座位序 === 莊家座位序);
+  });
+  const 連莊數字 = document.getElementById('連莊數字');
+  連莊數字.textContent = String(局況.連莊數);
+  // 沒有連莊時不顯示
+  連莊數字.hidden = 局況.連莊數 === 0;
+  document.querySelector(`.自風位[data-座位="${座位清單[莊家座位序]}"]`)
+    .append(連莊數字, document.getElementById('連莊鈕'));
+}
+
+// 按住超過這個時間算長按，用來倒退或減一
+const 長按毫秒數 = 500;
+
+/** 同一顆按鈕分辨點一下與長按：按住滿時間就執行長按動作，放開後那次點擊不再執行點一下的動作 */
+function 綁定點擊與長按(按鈕, 點一下動作, 長按動作) {
+  let 長按計時 = null;
+  let 長按已觸發 = false;
+  const 取消長按計時 = () => {
+    clearTimeout(長按計時);
+    長按計時 = null;
+  };
+
+  按鈕.addEventListener('pointerdown', () => {
+    長按已觸發 = false;
+    取消長按計時();
+    長按計時 = setTimeout(() => {
+      長按計時 = null;
+      長按已觸發 = true;
+      長按動作();
+    }, 長按毫秒數);
+  });
+  按鈕.addEventListener('pointerup', () => {
+    取消長按計時();
+    // 點擊事件緊接在放開之後送出，處理完再清掉旗標，避免殘留影響之後的鍵盤操作
+    setTimeout(() => { 長按已觸發 = false; }, 0);
+  });
+  按鈕.addEventListener('pointerleave', 取消長按計時);
+  按鈕.addEventListener('pointercancel', 取消長按計時);
+  // 手機長按會跳出選單，擋掉
+  按鈕.addEventListener('contextmenu', (事件) => 事件.preventDefault());
+
+  按鈕.addEventListener('click', () => {
+    if (長按已觸發) {
+      長按已觸發 = false;
+      return;
+    }
+    點一下動作();
+  });
+}
+
+/** 換莊鈕：點一下前進一局，四個自風字整層與中央區同時逆時針轉一格，新莊家連莊數歸零；
+    長按倒退一局，順時針轉回一格，連莊數還原成換莊前的數字。動畫結束後再換成新一局的畫面。
+    連莊鈕：點一下連莊數加一，長按減一。左上的重置鈕回到東一局、沒有連莊 */
+function 綁定換莊() {
+  const 換莊鈕 = document.getElementById('換莊鈕');
+  const 連莊鈕 = document.getElementById('連莊鈕');
+  const 自風字層 = document.getElementById('自風字層');
+  const 桌面中央 = document.getElementById('桌面中央');
+  const 局數重置鈕 = document.getElementById('局數重置鈕');
+  let 局況 = 讀取上次局況();
+
+  const 更新局況 = (新局況) => {
+    局況 = 新局況;
+    記住局況(局況);
+    渲染桌面局況(局況);
+  };
+  渲染桌面局況(局況);
+
+  /** 前進傳 1、倒退傳 -1；前進逆時針轉，倒退順時針轉 */
+  async function 換局(方向) {
+    // 轉動途中的其他操作會被動畫結束後的換局蓋掉，所以一起停用
+    [換莊鈕, 連莊鈕, 局數重置鈕].forEach((按鈕) => { 按鈕.disabled = true; });
+    const 減少動態 = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let 轉動清單 = [];
+    if (!減少動態) {
+      // 停在轉完的角度，等字換好再取消，避免轉回原位的那一格閃一下
+      const 動畫設定 = { duration: 600, easing: 'ease-in-out', fill: 'forwards' };
+      const 轉動角度 = 方向 * -90;
+      const 中央起始角度 = 中央區朝向莊家角度(局況.局序 % 4);
+      轉動清單 = [
+        自風字層.animate([{ transform: 'rotate(0deg)' }, { transform: `rotate(${轉動角度}deg)` }], 動畫設定),
+        桌面中央.animate(
+          [{ transform: `rotate(${中央起始角度}deg)` }, { transform: `rotate(${中央起始角度 + 轉動角度}deg)` }],
+          動畫設定,
+        ),
+      ];
+      await Promise.all(轉動清單.map((轉動) => 轉動.finished));
+    }
+    const 新局序 = (局況.局序 + 方向 + 總局數) % 總局數;
+    if (方向 === 1) {
+      更新局況({ 局序: 新局序, 連莊數: 0, 換莊前連莊數紀錄: [...局況.換莊前連莊數紀錄, 局況.連莊數] });
+    } else {
+      // 沒有紀錄（例如從東一局退回北四局）時連莊數為 0
+      const 紀錄 = 局況.換莊前連莊數紀錄.slice(0, -1);
+      const 還原連莊數 = 局況.換莊前連莊數紀錄.at(-1) ?? 0;
+      更新局況({ 局序: 新局序, 連莊數: 還原連莊數, 換莊前連莊數紀錄: 紀錄 });
+    }
+    轉動清單.forEach((轉動) => 轉動.cancel());
+    [換莊鈕, 連莊鈕, 局數重置鈕].forEach((按鈕) => { 按鈕.disabled = false; });
+  }
+
+  綁定點擊與長按(換莊鈕, () => 換局(1), () => 換局(-1));
+  綁定點擊與長按(
+    連莊鈕,
+    () => 更新局況({ ...局況, 連莊數: 局況.連莊數 + 1 }),
+    () => 更新局況({ ...局況, 連莊數: Math.max(0, 局況.連莊數 - 1) }),
+  );
+
+  局數重置鈕.addEventListener('click', () => 更新局況(建立初始局況()));
+}
+
 function 初始化畫面() {
   const 場風選單 = document.getElementById('場風選單');
   場風選單.addEventListener('change', () => {
@@ -912,6 +1129,8 @@ function 初始化畫面() {
   綁定區塊選取();
   綁定規則說明視窗();
   綁定結果視窗();
+  綁定模式切換();
+  綁定換莊();
 
   重新渲染全部();
 }

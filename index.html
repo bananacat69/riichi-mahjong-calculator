@@ -7,11 +7,15 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div class="整體容器">
+<div class="整體容器" id="整體容器">
 
   <header class="頁首">
     <h1>
-      日本麻將 番數與點數計算
+      <span class="左上按鈕列">
+        <button type="button" class="一般按鈕 模式切換鈕" id="模式切換鈕">切換到位置</button>
+        <button type="button" class="一般按鈕 局數重置鈕" id="局數重置鈕" hidden>重置</button>
+      </span>
+      <span class="標題文字">日本麻將 番數與點數計算</span>
       <button type="button" class="說明圈鈕" id="開啟規則說明鈕" aria-label="查看採用的規則細節" title="查看採用的規則細節">?</button>
       <button type="button" class="一般按鈕 頁首按鈕" id="全部重設鈕">全部重設</button>
     </h1>
@@ -43,7 +47,7 @@
     <div id="結果內容" tabindex="-1"></div>
   </dialog>
 
-  <div class="雙欄版面">
+  <div class="雙欄版面" id="計算模式畫面">
     <div class="操作欄">
 
       <section class="區塊">
@@ -137,6 +141,43 @@
 
       <button type="button" class="計算鈕" id="計算鈕"></button>
 
+    </div>
+  </div>
+
+  <div class="位置模式畫面" id="位置模式畫面" hidden>
+    <div class="風位桌面" id="風位桌面">
+      <div class="桌邊長方形 下邊" data-座位="下"></div>
+      <div class="桌邊長方形 右邊" data-座位="右"></div>
+      <div class="桌邊長方形 上邊" data-座位="上"></div>
+      <div class="桌邊長方形 左邊" data-座位="左"></div>
+      <!-- 四個自風字放在同一層，換莊時整層逆時針轉一格 -->
+      <div class="自風字層" id="自風字層">
+        <span class="自風位 下方" data-座位="下"><span class="風位字 自風字"></span></span>
+        <span class="自風位 右方" data-座位="右"><span class="風位字 自風字"></span></span>
+        <span class="自風位 上方" data-座位="上"><span class="風位字 自風字"></span></span>
+        <span class="自風位 左方" data-座位="左"><span class="風位字 自風字"></span></span>
+        <!-- 連莊數與連莊鈕只有一組，畫面更新時移到莊家的東旁邊 -->
+        <span class="連莊數字" id="連莊數字" hidden></span>
+        <button type="button" class="一般按鈕 連莊鈕" id="連莊鈕" aria-label="連莊" title="連莊">
+          <svg class="連莊圖示" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 7.5 7.5 12 12 5l4.5 7L21 7.5 19 18H5Z" />
+          </svg>
+        </button>
+      </div>
+      <!-- 中央區整塊轉向莊家，換莊時跟著自風字一起逆時針轉 -->
+      <div class="桌面中央" id="桌面中央">
+        <span class="場風標示">
+          <span class="風位字 中央字" id="場風字"></span>
+          <span class="局數點點" id="局數點點" role="img"></span>
+        </span>
+        <button type="button" class="一般按鈕 換莊鈕" id="換莊鈕" aria-label="換莊" title="換莊">
+          <!-- 逆時針箭頭：從左側沿下方繞一圈回到左上 -->
+          <svg class="換莊圖示" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 12a9 9 0 1 0 2.64-6.36L3 8" />
+            <path d="M3 3v5h5" />
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 
