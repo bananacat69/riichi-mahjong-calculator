@@ -15,6 +15,8 @@
 | `tests/scoring-tests.js` | 三十項回歸測試 |
 | `fonts/yuji-boku-east-south-west-north.woff2` | 位置模式的書法字型 Yuji Boku，只收東南西北四個字（SIL Open Font License 1.1） |
 
+部署前把 `index.html` 裡 `styles.css`、`scoring-engine.js`、`interface.js` 網址後面的 `?v=` 版本號改成新的，手機瀏覽器才會抓新檔，不會沿用暫存的舊檔（GitHub Pages 允許暫存十分鐘）。
+
 執行測試：
 
 ```
