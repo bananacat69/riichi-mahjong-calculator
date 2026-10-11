@@ -175,6 +175,27 @@
             <path d="M3 3v5h5" />
           </svg>
         </button>
+        <button type="button" class="一般按鈕 骰子鈕" id="骰子鈕" aria-label="擲骰子" title="擲骰子">
+          <!-- 骰子五點面 -->
+          <svg class="骰子圖示" viewBox="0 0 24 24" aria-hidden="true">
+            <rect class="骰子圖示外框" x="3" y="3" width="18" height="18" rx="4" />
+            <circle cx="8" cy="8" r="1.6" />
+            <circle cx="16" cy="8" r="1.6" />
+            <circle cx="12" cy="12" r="1.6" />
+            <circle cx="8" cy="16" r="1.6" />
+            <circle cx="16" cy="16" r="1.6" />
+          </svg>
+          <!-- 擲過骰後，骰子圖示裡的點換成這次的加總 -->
+          <span class="擲骰鈕加總" id="擲骰鈕加總" aria-hidden="true"></span>
+        </button>
+        <!-- 擲骰結果蓋在場風字上，點一下收起 -->
+        <button type="button" class="骰子結果層" id="骰子結果層" aria-label="收起骰子結果" hidden>
+          <span class="骰子列">
+            <span class="骰子面" id="第一顆骰子"></span>
+            <span class="骰子面" id="第二顆骰子"></span>
+          </span>
+          <span class="骰子加總" id="骰子加總"></span>
+        </button>
       </div>
     </div>
   </div>

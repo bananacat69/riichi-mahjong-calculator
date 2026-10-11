@@ -823,6 +823,77 @@ select {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+/* 擲骰鈕在中央區左下角，與換莊鈕左右對稱 */
+.骰子鈕 {
+  position: absolute;
+  left: 3%;
+  bottom: 3%;
+  display: flex;
+  font-size: min(4.5cqw, 4.5cqh);
+  padding: .35em;
+  touch-action: manipulation;
+  color: var(--主色);
+}
+.骰子圖示 { width: 1.6em; height: 1.6em; fill: currentColor; }
+.骰子圖示外框 { fill: none; stroke: currentColor; stroke-width: 2.2; }
+.擲骰鈕加總 {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: .95em;
+  font-weight: 700;
+  color: var(--強調色);
+}
+.骰子鈕.已擲骰 .骰子圖示 circle { display: none; }
+
+/* 擲骰結果蓋滿中央區，跟著中央區朝向莊家 */
+.骰子結果層 {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4cqw;
+  padding: 0;
+  border: 0;
+  background: var(--卡片底色);
+  font-family: inherit;
+  cursor: pointer;
+}
+.骰子列 { display: flex; gap: 6cqw; }
+.骰子面 {
+  display: grid;
+  grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+  width: 26cqw;
+  height: 26cqw;
+  padding: 3.5cqw;
+  border: 2px solid var(--主色);
+  border-radius: 18%;
+  background: var(--卡片底色);
+  box-sizing: border-box;
+}
+.骰子點 {
+  align-self: center;
+  justify-self: center;
+  width: 70%;
+  height: 70%;
+  border-radius: 50%;
+  background: var(--主色);
+}
+/* 日本骰子的一點是紅色大點 */
+.骰子點.紅色大點 { width: 100%; height: 100%; background: var(--強調色); }
+.骰子加總 {
+  font-size: 14cqw;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--強調色);
+}
+
+.骰子鈕:disabled,
 .換莊鈕:disabled,
 .連莊鈕:disabled,
 .局數重置鈕:disabled { cursor: default; opacity: .6; }

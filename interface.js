@@ -1064,19 +1064,23 @@ function 綁定換莊() {
   const 自風字層 = document.getElementById('自風字層');
   const 桌面中央 = document.getElementById('桌面中央');
   const 局數重置鈕 = document.getElementById('局數重置鈕');
+  const 骰子鈕 = document.getElementById('骰子鈕');
   let 局況 = 讀取上次局況();
 
   const 更新局況 = (新局況) => {
+    const 換了一局 = 新局況.局序 !== 局況.局序 || 新局況.換莊前連莊數紀錄.length !== 局況.換莊前連莊數紀錄.length;
     局況 = 新局況;
     記住局況(局況);
     渲染桌面局況(局況);
+    // 讓擲骰結果等跟著一局的資訊知道要清掉
+    if (換了一局) document.dispatchEvent(new CustomEvent('換了一局'));
   };
   渲染桌面局況(局況);
 
   /** 前進傳 1、倒退傳 -1；前進逆時針轉，倒退順時針轉 */
   async function 換局(方向) {
     // 轉動途中的其他操作會被動畫結束後的換局蓋掉，所以一起停用
-    [換莊鈕, 連莊鈕, 局數重置鈕].forEach((按鈕) => { 按鈕.disabled = true; });
+    [換莊鈕, 連莊鈕, 局數重置鈕, 骰子鈕].forEach((按鈕) => { 按鈕.disabled = true; });
     const 減少動態 = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let 轉動清單 = [];
     if (!減少動態) {
@@ -1103,7 +1107,7 @@ function 綁定換莊() {
       更新局況({ 局序: 新局序, 連莊數: 還原連莊數, 換莊前連莊數紀錄: 紀錄 });
     }
     轉動清單.forEach((轉動) => 轉動.cancel());
-    [換莊鈕, 連莊鈕, 局數重置鈕].forEach((按鈕) => { 按鈕.disabled = false; });
+    [換莊鈕, 連莊鈕, 局數重置鈕, 骰子鈕].forEach((按鈕) => { 按鈕.disabled = false; });
   }
 
   綁定點擊與長按(換莊鈕, () => 換局(1), () => 換局(-1));
@@ -1113,9 +1117,120 @@ function 綁定換莊() {
     () => 更新局況({ ...局況, 連莊數: Math.max(0, 局況.連莊數 - 1) }),
   );
 
-  局數重置鈕.addEventListener('click', () => 更新局況(建立初始局況()));
+  局數重置鈕.addEventListener('click', () => {
+    更新局況(建立初始局況());
+    // 本來就在東一局時局況沒變，仍要清掉擲骰結果
+    document.dispatchEvent(new CustomEvent('換了一局'));
+  });
 
   return () => 局況;
+}
+
+/* ---------- 位置模式：擲骰 ---------- */
+// 骰子各點數的點落在三乘三格子的哪幾格（由左上往右下編號 0 到 8）
+const 骰子點位置表 = {
+  1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8],
+};
+
+function 擲一顆骰子() {
+  return Math.floor(Math.random() * 6) + 1;
+}
+
+function 畫骰子面(骰子面, 點數) {
+  const 點位置 = 骰子點位置表[點數];
+  骰子面.replaceChildren(...Array.from({ length: 9 }, (_, 格子序) => {
+    const 格子 = document.createElement('span');
+    if (點位置.includes(格子序)) 格子.className = 點數 === 1 ? '骰子點 紅色大點' : '骰子點';
+    return 格子;
+  }));
+  骰子面.setAttribute('aria-label', `${點數}點`);
+}
+
+/** 骰子加總從莊家開始逆時針數，莊家算一：1、5、9 莊家，2、6、10 下家，3、7、11 對家，4、8、12 上家 */
+function 開門座位序(莊家座位序, 加總) {
+  return (莊家座位序 + 加總 - 1) % 4;
+}
+
+// 擲骰結果停留這麼久後自動收起
+const 骰子結果停留毫秒數 = 3000;
+
+/** 擲骰鈕：結果層蓋在場風字上播放兩顆骰子翻滾，停下後顯示加總，開門座位的長方形閃兩下；
+    點結果層或停留三秒後收起，加總留在擲骰鈕上，換局或重置時清掉 */
+function 綁定擲骰(取得目前局況) {
+  const 骰子鈕 = document.getElementById('骰子鈕');
+  const 結果層 = document.getElementById('骰子結果層');
+  const 骰子面清單 = [document.getElementById('第一顆骰子'), document.getElementById('第二顆骰子')];
+  const 加總 = document.getElementById('骰子加總');
+  const 擲骰鈕加總 = document.getElementById('擲骰鈕加總');
+  let 擲骰中 = false;
+  let 自動收起計時 = null;
+  const 收起結果 = () => {
+    clearTimeout(自動收起計時);
+    自動收起計時 = null;
+    結果層.hidden = true;
+  };
+
+  骰子鈕.addEventListener('click', async () => {
+    clearTimeout(自動收起計時);
+    擲骰中 = true;
+    骰子鈕.disabled = true;
+    加總.textContent = '';
+    結果層.hidden = false;
+    const 減少動態 = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!減少動態) {
+      // 翻滾期間每隔一小段時間換一次點數，同時晃動骰子
+      骰子面清單.forEach((骰子面) => 骰子面.animate(
+        [
+          { transform: 'rotate(0deg) translateY(0)' },
+          { transform: 'rotate(-25deg) translateY(-8%)' },
+          { transform: 'rotate(20deg) translateY(4%)' },
+          { transform: 'rotate(-10deg) translateY(-3%)' },
+          { transform: 'rotate(0deg) translateY(0)' },
+        ],
+        { duration: 900, easing: 'ease-out' },
+      ));
+      const 翻滾結束時間 = performance.now() + 900;
+      while (performance.now() < 翻滾結束時間) {
+        骰子面清單.forEach((骰子面) => 畫骰子面(骰子面, 擲一顆骰子()));
+        await new Promise((完成) => setTimeout(完成, 90));
+      }
+    }
+    const 點數清單 = 骰子面清單.map(() => 擲一顆骰子());
+    骰子面清單.forEach((骰子面, 序) => 畫骰子面(骰子面, 點數清單[序]));
+    const 點數加總 = 點數清單[0] + 點數清單[1];
+    加總.textContent = String(點數加總);
+    擲骰鈕加總.textContent = String(點數加總);
+    骰子鈕.classList.add('已擲骰');
+    骰子鈕.setAttribute('aria-label', `擲骰子（上次加總${點數加總}）`);
+
+    const 座位 = 座位清單[開門座位序(取得目前局況().局序 % 4, 點數加總)];
+    const 開門長方形 = document.querySelector(`.桌邊長方形[data-座位="${座位}"]`);
+    const 閃爍色 = 'rgba(176, 58, 46, .28)';
+    const 底色 = getComputedStyle(開門長方形).backgroundColor;
+    if (減少動態) {
+      // 不播閃爍，改成短暫標色
+      開門長方形.animate([{ backgroundColor: 閃爍色 }, { backgroundColor: 閃爍色 }], { duration: 1200 });
+    } else {
+      開門長方形.animate(
+        [底色, 閃爍色, 底色, 閃爍色, 底色].map((顏色) => ({ backgroundColor: 顏色 })),
+        { duration: 1200 },
+      );
+    }
+    擲骰中 = false;
+    骰子鈕.disabled = false;
+    自動收起計時 = setTimeout(收起結果, 骰子結果停留毫秒數);
+  });
+
+  結果層.addEventListener('click', () => {
+    if (擲骰中) return;
+    收起結果();
+  });
+
+  document.addEventListener('換了一局', () => {
+    擲骰鈕加總.textContent = '';
+    骰子鈕.classList.remove('已擲骰');
+    骰子鈕.setAttribute('aria-label', '擲骰子');
+  });
 }
 
 function 初始化畫面() {
@@ -1148,6 +1263,7 @@ function 初始化畫面() {
   // 模式切換要讀位置模式的局況，所以先綁定換莊
   const 取得目前局況 = 綁定換莊();
   綁定模式切換(取得目前局況);
+  綁定擲骰(取得目前局況);
 
   重新渲染全部();
 }
