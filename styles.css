@@ -639,7 +639,6 @@ select {
   cursor: pointer;
 }
 .一般按鈕:hover { background: #efece2; }
-.左上按鈕列 { flex: none; display: flex; gap: 8px; }
 .模式切換鈕,
 .局數重置鈕 { flex: none; font-size: 13px; font-weight: 400; letter-spacing: 0; color: var(--文字色); }
 .頁首按鈕 { margin-left: auto; flex: none; font-size: 13px; font-weight: 400; letter-spacing: 0; }
@@ -652,7 +651,7 @@ select {
   display: flex;
   flex-direction: column;
 }
-/* 位置模式不顯示標題，只留切換鈕停在與計算模式相同的左上角，標題原本的高度也讓給桌面 */
+/* 位置模式不顯示標題，切換鈕停在與計算模式相同的左上角、重置鈕在右上角，標題原本的高度也讓給桌面 */
 .整體容器.位置模式中 .頁首 {
   flex: none;
   height: 0;
@@ -662,15 +661,14 @@ select {
 }
 .整體容器.位置模式中 .標題文字,
 .整體容器.位置模式中 .說明圈鈕 { display: none; }
-/* 上下排列，寬度不超過切換鈕，避免壓到正方形 */
-.整體容器.位置模式中 .左上按鈕列 {
-  flex-direction: column;
-  align-items: stretch;
+.整體容器.位置模式中 .模式切換鈕,
+.整體容器.位置模式中 .局數重置鈕 {
   position: absolute;
   top: var(--容器上內距);
-  left: var(--容器側內距);
   z-index: 1;
 }
+.整體容器.位置模式中 .模式切換鈕 { left: var(--容器側內距); }
+.整體容器.位置模式中 .局數重置鈕 { right: var(--容器側內距); }
 .位置模式畫面 {
   flex: 1;
   min-height: 0;
