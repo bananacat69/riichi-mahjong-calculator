@@ -498,6 +498,11 @@ select {
 }
 .勾選項 input { accent-color: var(--主色); width: 15px; height: 15px; cursor: pointer; }
 .勾選項.不可用 { opacity: .4; cursor: not-allowed; }
+/* 流局：種類鈕與聽牌勾選排成同一列，選荒牌流局才在右邊出現聽牌勾選；窄螢幕放不下才換行 */
+.流局設定 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.聽牌者區 { display: flex; align-items: center; gap: 10px; }
+.聽牌者區[hidden] { display: none; }
+.聽牌者格 { display: flex; flex-wrap: wrap; gap: 5px 12px; }
 
 /* ---------- 計算按鈕與結果視窗 ---------- */
 .計算鈕 {
@@ -916,6 +921,57 @@ select {
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 }
+/* 每家自風字左下角是立直鈕，跟著字的方向，與莊家東右下角的連莊鈕左右對稱；立直後鈕改成實心 */
+.立直鈕 {
+  position: absolute;
+  right: 100%;
+  bottom: 0;
+  pointer-events: auto;
+  display: flex;
+  font-size: max(2.25cqw, 11px);
+  padding: .3em;
+  color: var(--主色);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.立直圖示 {
+  width: 1.6em;
+  height: 1.6em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+.立直圖示 circle { fill: var(--強調色); stroke: none; }
+.立直鈕[aria-pressed="true"] { background: var(--主色); border-color: var(--主色); color: #fff; }
+/* 立直棒橫放在自風字與桌面中央之間（長方形靠中央那一側的空白），白底黑框、中間一顆紅點 */
+.立直棒 {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  /* 字與長方形內側框線之間只有約 3.75cqw，棒子高度與間距加起來要留在這個範圍內 */
+  margin-bottom: .3cqw;
+  width: 40cqw;
+  height: 2.8cqw;
+  box-sizing: border-box;
+  border: max(2px, .5cqw) solid #000;
+  border-radius: 1.4cqw;
+  background: #fff;
+}
+.立直棒::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1.6cqw;
+  height: 1.6cqw;
+  border-radius: 50%;
+  background: var(--強調色);
+  transform: translate(-50%, -50%);
+}
+.立直棒[hidden] { display: none; }
 
 /* 點數層與自風字層一樣和正方形外緣重合，但換莊時不轉。
    每家的點數區就是長方形延伸出來的那一格（邊長四分之一的正方形，位在該座位右手邊的角落），
@@ -1001,6 +1057,21 @@ select {
   top: 0;
   display: flex;
   gap: min(1.2cqw, 1.2cqh);
+}
+/* 供託點數在場風字正下方，夾在骰子鈕與換莊鈕之間 */
+.供託點數 {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  /* 書法字的筆畫會超出字框，往下多留一點距離 */
+  margin-top: min(2.5cqw, 2.5cqh);
+  white-space: nowrap;
+  font-size: min(7cqw, 7cqh);
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--主色);
 }
 .局數點 {
   width: min(3.5cqw, 3.5cqh);
@@ -1106,6 +1177,7 @@ select {
 .骰子鈕:disabled,
 .換莊鈕:disabled,
 .連莊鈕:disabled,
+.立直鈕:disabled,
 .局數重置鈕:disabled { cursor: default; opacity: .6; }
 
 /* 窄螢幕把牌縮小，讓一列放得下九張 */
