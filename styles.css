@@ -763,6 +763,9 @@ select {
 .調整點數總差.有差距 { color: var(--強調色); }
 .調整點數按鈕列 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .調整點數按鈕列 .一般按鈕 { padding: 6px 0; font-variant-numeric: tabular-nums; color: var(--主色); }
+/* 供託一次加減一根立直棒，只有兩顆鈕 */
+.供託按鈕列 { grid-template-columns: repeat(2, 1fr); }
+.調整點數按鈕列 .一般按鈕:disabled { cursor: default; opacity: .5; }
 .調整點數確認鈕 { width: 100%; }
 .調整點數確認鈕:disabled { cursor: default; opacity: .5; }
 

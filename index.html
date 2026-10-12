@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>日本麻將 番數與點數計算</title>
 <!-- 樣式與程式網址帶版本號，每次部署改版本號，手機瀏覽器才不會沿用暫存的舊檔 -->
-<link rel="stylesheet" href="styles.css?v=20261012-8">
+<link rel="stylesheet" href="styles.css?v=20261012-9">
 </head>
 <body>
 <!-- 主畫面是位置模式；計算與設定起始值收在左邊的兩個側邊欄，用左緣的計算機、齒輪標籤打開或收合 -->
@@ -255,7 +255,7 @@
   </div>
 </aside>
 
-<!-- 調整點數：四家各一列，名稱、點數與 −1000、−100、+100、+1000 四顆鈕，列由程式產生；按確認跳出確認視窗，同意才改桌面點數 -->
+<!-- 調整點數：四家各一列，名稱、點數與 −1000、−100、+100、+1000 四顆鈕，最下面一列是供託與 −1000、+1000 兩顆鈕，列由程式產生；按確認跳出確認視窗，同意才改桌面點數與供託 -->
 <aside class="側邊欄 調整點數側邊欄" id="調整點數側邊欄" aria-label="調整點數" inert>
   <div class="側邊欄內容">
     <header class="頁首">
@@ -317,7 +317,7 @@
 </dialog>
 
 
-<script src="scoring-engine.js?v=20261012-8"></script>
-<script src="interface.js?v=20261012-8"></script>
+<script src="scoring-engine.js?v=20261012-9"></script>
+<script src="interface.js?v=20261012-9"></script>
 </body>
 </html>

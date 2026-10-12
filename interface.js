@@ -1727,11 +1727,47 @@ function 綁定點數(收合側邊欄) {
   });
   document.getElementById('調整點數清單').append(...調整列清單.map((項目) => 項目.列));
 
+  // 四家下面再一張供託卡片，一次加減一根立直棒，最低 0；同樣按確認並確定後才寫回桌面
+  let 調整中供託 = 讀取供託點數();
+  const 供託列 = (() => {
+    const 列 = document.createElement('div');
+    列.className = '調整點數列';
+    const 標頭 = document.createElement('div');
+    標頭.className = '調整點數標頭';
+    const 名稱 = document.createElement('span');
+    名稱.className = '調整點數名稱';
+    名稱.textContent = '供託';
+    const 算式 = document.createElement('span');
+    算式.className = '調整點數算式';
+    算式.setAttribute('aria-live', 'polite');
+    const 數字 = document.createElement('span');
+    數字.className = '調整點數數字';
+    標頭.append(名稱, 算式, 數字);
+    const 按鈕列 = document.createElement('div');
+    按鈕列.className = '調整點數按鈕列 供託按鈕列';
+    const 按鈕清單 = [-立直棒點數, 立直棒點數].map((加減量) => {
+      const 按鈕 = document.createElement('button');
+      按鈕.type = 'button';
+      按鈕.className = '一般按鈕';
+      按鈕.textContent = 加減量 > 0 ? `+${加減量}` : `−${-加減量}`;
+      按鈕.setAttribute('aria-label', `供託${加減量 > 0 ? '加' : '減'} ${Math.abs(加減量)}`);
+      按鈕.addEventListener('click', () => {
+        調整中供託 = Math.max(0, 調整中供託 + 加減量);
+        渲染調整點數();
+      });
+      按鈕列.appendChild(按鈕);
+      return 按鈕;
+    });
+    列.append(標頭, 按鈕列);
+    return { 列, 算式, 數字, 減少鈕: 按鈕清單[0] };
+  })();
+  document.getElementById('調整點數清單').append(供託列.列);
+
   const 帶正負號 = (數值) => (數值 > 0 ? `+${數值}` : 數值 < 0 ? `−${-數值}` : '±0');
   const 調整點數總差 = document.getElementById('調整點數總差');
 
-  /** 卡片只顯示名稱，沒填就空白；改過的那家在目前點數前面加上「原本±差額=」，等號右邊就是目前點數；
-      標題旁顯示調整後四家總分加上供託與開局總分（起始點數乘四）的差距；沒有任何變動時確認鈕停用 */
+  /** 卡片只顯示名稱，沒填就空白；改過的那家（含供託）在目前點數前面加上「原本±差額=」，等號右邊就是目前點數；
+      標題旁顯示調整後四家總分加上調整後供託與開局總分（起始點數乘四）的差距；四家與供託都沒有變動時確認鈕停用 */
   function 渲染調整點數() {
     調整列清單.forEach((項目, 座位序) => {
       項目.名稱.textContent = 四家名稱[座位序].trim();
@@ -1742,17 +1778,23 @@ function 綁定點數(收合側邊欄) {
         ? ''
         : `${四家點數[座位序]}${差額 > 0 ? '+' : '−'}${Math.abs(差額)}=`;
     });
+    const 目前供託 = 讀取供託點數();
+    const 供託差額 = 調整中供託 - 目前供託;
+    供託列.數字.textContent = String(調整中供託);
+    供託列.算式.textContent = 供託差額 === 0 ? '' : `${目前供託}${供託差額 > 0 ? '+' : '−'}${Math.abs(供託差額)}=`;
+    供託列.減少鈕.disabled = 調整中供託 === 0;
     const 開局總分 = 起始點數 * 座位清單.length;
     // 供託是從四家點數扣出來暫放在桌上的，要加回來才對得上開局總分
-    const 總差 = 調整中點數.reduce((合計, 點數) => 合計 + 點數, 0) + 讀取供託點數() - 開局總分;
+    const 總差 = 調整中點數.reduce((合計, 點數) => 合計 + 點數, 0) + 調整中供託 - 開局總分;
     調整點數總差.textContent = 帶正負號(總差);
     調整點數總差.classList.toggle('有差距', 總差 !== 0);
     調整點數總差.title = `調整後四家總分加上供託，與開局總分 ${開局總分} 的差距`;
     調整點數總差.setAttribute('aria-label', `與開局總分 ${開局總分} 相差 ${帶正負號(總差)}`);
-    調整點數確認鈕.disabled = 調整中點數.every((點數, 座位序) => 點數 === 四家點數[座位序]);
+    調整點數確認鈕.disabled = 供託差額 === 0 && 調整中點數.every((點數, 座位序) => 點數 === 四家點數[座位序]);
   }
   document.addEventListener('打開調整點數', () => {
     調整中點數 = 四家點數.slice();
+    調整中供託 = 讀取供託點數();
     渲染調整點數();
   });
   渲染調整點數();
@@ -1763,8 +1805,14 @@ function 綁定點數(收合側邊欄) {
         ? null
         : `${四家名稱[座位序].trim() || 起始稱呼清單[座位序]}：${四家點數[座位序]} → ${點數}`))
       .filter((說明) => 說明 !== null);
+    const 目前供託 = 讀取供託點數();
+    if (調整中供託 !== 目前供託) 變動說明.push(`供託：${目前供託} → ${調整中供託}`);
     const 新點數 = 調整中點數.slice();
-    跳出確認(`要這樣調整點數嗎？\n${變動說明.join('\n')}`, () => 更新點數(新點數));
+    const 新供託 = 調整中供託;
+    跳出確認(`要這樣調整點數嗎？\n${變動說明.join('\n')}`, () => {
+      更新點數(新點數);
+      記住供託點數(新供託);
+    });
   });
 }
 
